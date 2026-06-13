@@ -1,0 +1,24 @@
+import { defineConfig, devices } from '@playwright/test';
+
+// Smoke-only in Phase 0. Phase 4 (qa) expands this to the full
+// measure -> plan -> simulate flow across the six fixtures.
+export default defineConfig({
+  testDir: './e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  reporter: 'list',
+  use: {
+    baseURL: 'http://localhost:5180',
+    trace: 'on-first-retry',
+  },
+  projects: [
+    { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
+  ],
+  // Boot the real app for e2e; reuse a running dev server locally.
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:5180',
+    reuseExistingServer: !process.env.CI,
+  },
+});
