@@ -709,6 +709,52 @@
   line-height: 1.5;
 }
 
+/* ── Area-clear reminder (DB-6) — an operator's own attestation, NOT a gate and
+   NOT an authority. Deliberately quiet: it stays subordinate to the persistent
+   SafetyBanner. No success/"done" styling — ticking acknowledges, never unlocks. */
+.area-clear {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.area-clear-head {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+.area-clear-body {
+  margin: 6px 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.5;
+}
+.area-clear-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-sm);
+  color: var(--fg);
+  line-height: 1.45;
+  cursor: pointer;
+}
+.area-clear-check input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  accent-color: var(--accent);
+}
+.area-clear-reaffirm {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 /* ── Diagrams (SPEC §9) ────────────────────────────────────────────────────── */
 .notch-diagram,
 .escape-compass {

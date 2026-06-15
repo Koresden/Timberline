@@ -14,6 +14,7 @@
 import type { ActionablePlan } from '../engine/types';
 import { NotchDiagram } from './NotchDiagram';
 import { EscapeCompass } from './EscapeCompass';
+import { AreaClearReminder } from './AreaClearReminder';
 import { WhyList } from './WhyList';
 
 interface CutCardProps {
@@ -160,6 +161,11 @@ export function CutCard({
               Clear the {dangerRadiusLabel} danger zone. Retreat along an escape route as the tree
               starts to move — never stand directly behind the tree.
             </p>
+            {/* Area-clear attestation (DB-6) — additive friction only; gates nothing. */}
+            <AreaClearReminder
+              dangerRadiusLabel={dangerRadiusLabel}
+              escapeAzimuths={plan.escapeAzimuths}
+            />
           </div>
         </li>
       </ol>
