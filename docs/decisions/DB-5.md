@@ -1,7 +1,7 @@
 # DB-5 — Offline service worker (PWA completion)
 
 **Phase:** post-v1 follow-up #1 (from DB-4) · **Author:** orchestrator
-**For approval by:** Daniel · **Status:** ⬜ AWAITING APPROVAL
+**For approval by:** Daniel · **Status:** ✅ DONE (2026-06-15) — implemented, safety-auditor-reviewed, all gates green. See close-out below.
 
 This is the "one-line brief" promised by **DB-0 Decision 3** and queued first in the
 DB-4 follow-up order. It closes the last open part of the **offline-capable PWA**
@@ -82,8 +82,53 @@ delivery/caching. The persistent SafetyBanner and all gates are unaffected.
 ---
 
 ### Sign-off
-- [ ] Approve adding `vite-plugin-pwa` (Option A) with the config above
-- [ ] Safety-auditor confirms `autoUpdate` posture + version-stamp question
-- [ ] On approval: install, wire config, add the offline e2e spec, run all gates, log results
+- [x] Approve adding `vite-plugin-pwa` (Option A) with the config above — Daniel, 2026-06-15
+- [x] Daniel resolved the two open questions: ship `autoUpdate` **and** the build-version stamp
+- [x] Safety-auditor reviewed the result — **APPROVE-WITH-CHANGES** (2026-06-15); copy change applied
+- [x] Installed, wired config, added offline e2e, all gates green — see close-out below
 
-> I have **not** installed anything yet — awaiting your check on this brief.
+---
+
+## Close-out record (2026-06-15)
+
+**Shipped as:** `vite-plugin-pwa@^1.3.0` (dev dep) generating an offline service worker.
+
+**What landed**
+- `vite.config.ts` — `VitePWA({ registerType: 'autoUpdate', injectRegister: 'auto',
+  manifest: false, workbox: { globPatterns incl. woff2 + webmanifest, navigateFallback:
+  '/index.html', cleanupOutdatedCaches: true }, devOptions.enabled: false })`. The
+  hand-authored `public/manifest.webmanifest` is reused (`manifest: false`).
+- Build stamp: `__BUILD_DATE__` injected via `define`; unobtrusive `.app-foot` in `App.tsx`.
+- Offline verification: `e2e/offline.spec.ts` + `playwright.offline.config.ts` (runs the
+  **production build** on port 5181, since the SW is off in `vite dev`). New script
+  `test:e2e:offline`. Main config gains `testIgnore: '**/offline.spec.ts'`.
+- `.gitignore` += `dev-dist` (defensive; not produced while `devOptions` is off).
+
+**Safety-auditor ruling (verdict: APPROVE-WITH-CHANGES — its position ships):**
+1. `autoUpdate` **confirmed** as the correct posture (shortest stale-safety-logic window
+   vs. `prompt`, which could strand a user on old advice indefinitely).
+2. Build-stamp copy **changed** (auditor-required): `Build <date> · works offline` →
+   **`Safety logic build <date> · reconnect for updates`** — the stamp now carries the
+   caveat (names *what* is dated + the action that closes the gap) instead of an
+   "offline is fine" reassurance. Dependent e2e assertion updated in the same change.
+3. **No** engine / locked-constant / referral-gate / SafetyBanner change — pure
+   delivery/caching, confirmed. The offline e2e re-asserts the banner + "Planning aid —
+   not authorization" survives a cold offline reload.
+
+**Residual risks recorded (auditor, non-blocking):**
+- **Inherent stale-logic window.** `autoUpdate` is the shortest practical window, not
+  zero: a permanently-offline user never receives a corrected gate/constant, and even
+  with connectivity the update applies on the *next* launch (current session finishes on
+  the prior build). No backend kill-switch by design. Mitigation: the dated build stamp
+  identifies the in-hand logic version.
+- **Stamp dates the build, not the constants specifically.** Any source change bumps the
+  date. Acceptable for v1 (a safety-constant change always ships as a newer build, so a
+  stale constant always maps to an old date — no false "fresh" signal). A dedicated
+  constants-version stamp is a possible v2 refinement, not required here.
+
+**Gates:** `npm run lint` clean · `npm run test` **120 unit** · `npm run test:e2e` **12**
+· `npm run test:e2e:offline` **2** (stable ×3) · `npm run build` ✓ (SW generated,
+precache **11 entries / 376 KiB** incl. all 5 fonts). `npm audit`: **6 high, unchanged** —
+all the pre-existing esbuild **dev-server** chain (renumbered since DB-0, same dev-only
+class); `vite-plugin-pwa` added **no** new advisories and ships nothing vulnerable to the
+client bundle.

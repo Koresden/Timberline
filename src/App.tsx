@@ -76,6 +76,19 @@ export default function App() {
         {tab === 'plan' && <PlanScreen />}
         {tab === 'simulate' && <SimulateScreen />}
       </main>
+
+      {/* Build stamp (DB-5): offline-cached safety logic can go stale, so the
+          user can always see which build they're holding and the one action that
+          closes the gap. Copy vetted by the safety-auditor — the stamp carries the
+          caveat ("reconnect for updates"), not an "offline is fine" reassurance.
+          Frozen at build time. */}
+      <footer className="app-foot">
+        <span>
+          Safety logic build{' '}
+          <time dateTime={__BUILD_DATE__}>{__BUILD_DATE__}</time>
+          {' '}· reconnect for updates
+        </span>
+      </footer>
     </div>
   );
 }
