@@ -68,25 +68,38 @@ plans only.
 
 **Recommendation: A** — ephemeral, non-gating, self-resetting.
 
-## Decision 3 — Copy (draft — **safety-auditor vets before ship**)
+## Decision 3 — Copy ✅ **safety-auditor APPROVED-WITH-CHANGES (2026-06-15)**
 
-Proposed, deliberately attestation-voiced (guardrail 1) and re-stating worst-case radius
-(guardrail 5). `{R}` = the existing `dangerRadiusLabel`; `{e1}`,`{e2}` = `escapeAzimuths`.
+Final, auditor-vetted copy. Attestation-voiced throughout (guardrail 1), re-states the
+worst-case radius (guardrail 5). `{R}` = the existing `dangerRadiusLabel`; `{e1}`,`{e2}` =
+`escapeAzimuths`. **Ship this verbatim** — the heading and checkbox label below are the
+auditor's exact wording.
 
-> **Before you cut — clear the danger zone yourself.**
+> **You are responsible for clearing the danger zone.**
 > This app can't see your site. Walk the full **{R}** radius (2× the tree's worst-case
 > height) and move people, pets, and equipment out of it. Confirm both escape routes —
 > **{e1}° / {e2}°**, ~45° back from the fall line — are clear and walkable.
 >
-> ☐ *I have personally walked and cleared the {R} danger zone.*
+> ☐ *I have personally walked the full {R} radius and moved people, pets, and equipment
+> out of it — and I will re-walk it before every cut.*
 >
 > *(On check:)* Re-walk and re-check before **every** cut. This reminder never counts as
 > the area being clear — only your eyes on the ground do.
 
-**Note for the auditor:** confirm (a) the box label is attestation-voiced, not
-state-voiced; (b) nothing here can be read as the app asserting the area is clear or
-granting permission; (c) whether the danger radius should also restate the raw metres
-(it inherits the user's unit via `dangerRadiusLabel`).
+**Auditor's two required changes (vs. the original draft), now applied:**
+1. **Heading** — was "Before you cut — clear the danger zone yourself." The "before X →
+   then cut" cadence could read as the app *granting permission*. Now names the human as
+   sole actor with no permission rhythm.
+2. **Checkbox label** — was "I have personally walked and cleared the {R} danger zone." A
+   ticked "I have cleared…" box reads, in an incident review, as a **clearance record** —
+   the human asserting a world-state the app then visually endorses. Reworded to
+   first-person *action* only ("walked," "moved," "will re-walk"), claiming no end-state,
+   and front-loads the re-walk-every-cut obligation so it shows even if the box is never
+   ticked.
+
+**Auditor ruled (c) — do NOT restate raw metres.** `{R}` already carries the user's active
+unit; a second figure invites unit confusion. The "(2× the tree's worst-case height)"
+gloss conveys the derivation with one number. Keep one number.
 
 ---
 
@@ -99,6 +112,19 @@ granting permission; (c) whether the danger radius should also restate the raw m
 - **Consumed by** `CutCard` inside step 4, beside `EscapeCompass`, passing the values the
   card already has. CutCard's interface gains nothing it doesn't already hold.
 - **No change** to `engine/**`, constants, the referral path, or the SafetyBanner.
+- **Stays visually subordinate to the SafetyBanner** (auditor): quieter than or equal to
+  it, never a headline — it's the operator's own checklist, not an authority.
+
+### Auditor's three residual-gate fences (carry into the build ticket)
+1. **No `disabled`/`aria-disabled`/visibility/styling coupling to `checked`.** Nothing —
+   not the spec fields, not Simulate navigation, not any "proceed" affordance — may
+   respond to the checkbox state. The moment something does, it's a gate.
+2. **No completion/success styling and no telemetry on the check.** The on-check reveal is
+   a calm re-affirmation only — no green "done" state, no checkmark-complete affordance
+   that frames ticking as "unlocking" or "passing."
+3. **`checked` stays local `useState`, never lifted to the plan store / storage.** A
+   one-line code comment must say so — if it ever moves to shared/persisted state,
+   guardrail 4 breaks silently.
 
 ## Verification plan
 - Component renders the worst-case `dangerRadiusLabel` and both escape azimuths verbatim
@@ -106,23 +132,30 @@ granting permission; (c) whether the danger radius should also restate the raw m
 - **e2e:** on an actionable fixture, the reminder is visible, starts **unchecked**, the cut
   specs are visible **both before and after** checking (proves non-gating), and a reload
   re-renders it **unchecked** (proves not persisted).
+- **e2e (auditor):** the **Simulate entry point is reachable with the box unchecked**
+  (proves no de-facto gate on navigation).
 - **e2e:** a referral fixture shows **no** attestation (Decision 1B).
-- `lint` / `test` / `test:e2e` green; safety-auditor signs off the final copy.
+- `lint` / `test` / `test:e2e` green. ✅ Safety-auditor copy + guardrails signed off
+  (2026-06-15); sign-off is conditional on the two copy changes landing verbatim and the
+  non-gating e2e assertions above being present before ship.
 
 ## Cost / risk
 - Small additive UI; no dep, no engine/constant/gate change; fully reversible.
-- The real risk is **scope creep into a real gate** — explicitly fenced off by guardrail 2
-  and Decision 2C, and re-checked by the auditor.
+- The real risk is **scope creep into a real gate** — explicitly fenced off by guardrail 2,
+  Decision 2C, and the three auditor fences above; re-checked by the auditor.
 
 ---
 
 ### Sign-off
-- [ ] Decision 1 — placement (recommend A: CutCard step 4, actionable only)
-- [ ] Decision 2 — behavior (recommend A: ephemeral, non-gating, self-resetting)
-- [ ] Decision 3 — copy approved **by the safety-auditor** (draft above)
-- [ ] Confirm we are building a **reminder/attestation, not a gate** (no precondition)
-- [ ] On approval: build the component + wire into CutCard, add the e2e, run gates, log
+- [x] Decision 3 — copy + guardrails **APPROVED-WITH-CHANGES by the safety-auditor**
+  (2026-06-15); the two required changes are applied verbatim above
+- [ ] Decision 1 — placement (recommend A: CutCard step 4, actionable only) — **Daniel**
+- [ ] Decision 2 — behavior (recommend A: ephemeral, non-gating, self-resetting) — **Daniel**
+- [ ] Confirm we are building a **reminder/attestation, not a gate** (no precondition) — **Daniel**
+- [ ] On approval: build the component + wire into CutCard, add the e2e (incl. the three
+  auditor fences), run gates, log
 
-> Nothing built yet — this is the design for your check. The safety-auditor vets the final
-> copy and confirms the guardrails before it ships; per project rule, the auditor's
-> position wins any disagreement.
+> Copy is auditor-vetted; **Decisions 1, 2, and the reminder-not-a-gate framing await
+> Daniel.** The auditor's sign-off is conditional on the exact copy above landing verbatim
+> and the non-gating e2e assertions being present. Per project rule, the auditor's position
+> ships on any disagreement.
