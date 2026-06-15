@@ -1,16 +1,27 @@
 import { test, expect } from '@playwright/test';
+import { gotoApp, safetyBanner, goToTab } from './helpers';
 
 /**
- * Phase 0 smoke: the app boots and the persistent safety banner is present.
- * Phase 4 (qa) expands e2e to the full measure -> plan -> simulate flow and
- * asserts that refer-professional fixtures never render cut specs.
- *
- * Run with `npm run test:e2e` (requires `npx playwright install` once).
+ * Boot smoke: the app shell renders, the persistent safety banner is present on
+ * EVERY tab (Measure / Plan / Simulate), and there is no dismiss/override control.
+ * The full measure → plan → simulate flow + the six fixtures live in flow.spec.ts.
  */
-test('app boots and shows the persistent safety banner', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Timberline' })).toBeVisible();
-  await expect(page.getByRole('note', { name: 'Safety notice' })).toContainText(
-    'Planning aid',
-  );
+test('app boots with the persistent, non-dismissable safety banner on every tab', async ({ page }) => {
+  await gotoApp(page);
+
+  await expect(safetyBanner(page)).toContainText('Planning aid — not authorization');
+  // No override / dismiss affordance anywhere on the banner.
+  await expect(page.getByRole('button', { name: /dismiss|override|ignore|hide/i })).toHaveCount(0);
+
+  // Banner persists across all three steps.
+  await expect(page.getByRole('heading', { name: 'Measure', exact: true })).toBeVisible();
+  await expect(safetyBanner(page)).toBeVisible();
+
+  await goToTab(page, 'Plan');
+  await expect(page.getByRole('heading', { name: 'Plan the fall' })).toBeVisible();
+  await expect(safetyBanner(page)).toBeVisible();
+
+  await goToTab(page, 'Sim');
+  await expect(page.getByRole('heading', { name: 'Simulate the fall' })).toBeVisible();
+  await expect(safetyBanner(page)).toBeVisible();
 });

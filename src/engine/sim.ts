@@ -65,6 +65,15 @@ interface Vec {
  *   lean or wind. A caller that still has the raw inputs may pass them for a
  *   wider, even more conservative wedge.
  *
+ * ## `residualLeanDeg` (F3 — Phase 4 audit): widening only, never narrowing.
+ * The name implies the lean component the hinge could NOT correct, but the UI
+ * deliberately feeds it the RAW total lean magnitude. That is an ACCEPTED
+ * conservative over-estimate: a larger value only WIDENS the corridor (more
+ * obstacles caught), which is the safe direction. This parameter must NEVER be
+ * used to NARROW the corridor below the value passed here — i.e. do not "optimize"
+ * it to a smaller true-residual lean, as that would shrink the hazard-checking
+ * wedge. `Math.abs` is applied below so a signed lean can only ever widen.
+ *
  * Takes an `ActionablePlan` (DB-1 §4): a referral has no fall direction or
  * corridor, so the union is narrowed at the seam — only actionable plans are
  * simulated.

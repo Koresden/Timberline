@@ -89,6 +89,17 @@ describe('plan/Rule 1 — referral gates (each fires independently)', () => {
     expect(p.reasons.some((r) => /lean/i.test(r))).toBe(true);
   });
 
+  it('GATE: palm-like species refers (no hinge wood — engine cannot honestly plan it)', () => {
+    // Palms have no real hinge wood; the notch/hinge model does not apply. The
+    // safe default is to refer (information-only), exactly like dead-compromised.
+    const p = recommendPlan(baseInput({ speciesClass: 'palm-like' }));
+    expect(p.verdict).toBe('refer-professional');
+    expect(p.reasons.some((r) => /palm/i.test(r))).toBe(true);
+    // A referral carries NO cut specs.
+    expect('notch' in p).toBe(false);
+    expect('hinge' in p).toBe(false);
+  });
+
   it('NON-GATE: a hazard well outside 1.5× height does NOT refer', () => {
     // height 14 → 21 m trigger. House 50 m out, on the fall line → safe.
     const p = recommendPlan(
@@ -107,6 +118,93 @@ describe('plan/Rule 1 — referral gates (each fires independently)', () => {
       baseInput({ hazards: [{ kind: 'structure', distanceM: 30, azimuth: 90 }] }),
     );
     expect(p.verdict).not.toBe('refer-professional');
+  });
+});
+
+// ── F1 — hazard sweep must NOT shrink with wind ──────────────────────────────
+
+describe('plan/F1 — wind must not hide a hazard near the calm-cone edge', () => {
+  // Auditor's regression: negligible lean (cone centers on target 180), open-face
+  // notch (calm base cone = STEERING_CONE_OPEN_FACE_DEG = 15°). A structure sits off
+  // to the side, reachable ONLY by fall lines near the calm-cone edge and within
+  // 1.5× height of one of them. On a calm day the ±15° sweep catches it → refer.
+  // The OLD wiring fed the hazard gate the WIND-REDUCED cone: at 14 kph the cone
+  // shrinks to 15·(1 − 0.5·14/15) ≈ 8°, the swept set no longer reaches the hazard,
+  // and the tree got actionable cut specs. Verified: with height 14, hazard at
+  // azimuth 250°, distance 24 m, the calm-cone nearest fall line is 19.66 m away
+  // (≤ 21 m trigger → refer) but the 8° cone's nearest line is 21.19 m (> 21 →
+  // would NOT refer). The hazard sweep must use a cone no narrower than the calm
+  // base cone, so wind cannot hide it.
+  const hazardAt = (windKph: number): FellingPlan =>
+    recommendPlan(
+      baseInput({
+        heightM: 14,
+        leanDeg: 0, // negligible → cone centered on target (180)
+        leanAzimuth: 0,
+        targetAzimuth: 180,
+        windKph,
+        hazards: [{ kind: 'structure', distanceM: 24, azimuth: 250 }],
+      }),
+    );
+
+  it('refers on a calm day (baseline)', () => {
+    const p = hazardAt(0);
+    expect(p.verdict).toBe('refer-professional');
+    expect(p.reasons.some((r) => /structure|power line|road|height of a possible fall/i.test(r))).toBe(true);
+  });
+
+  it('STILL refers under wind (14 kph) — wind must not narrow the hazard sweep', () => {
+    const p = hazardAt(14);
+    expect(p.verdict).toBe('refer-professional');
+    expect(p.reasons.some((r) => /structure|power line|road|height of a possible fall/i.test(r))).toBe(true);
+    expect('notch' in p).toBe(false);
+  });
+});
+
+// ── F4 — severe-forward-lean boundary (> vs >=) ──────────────────────────────
+
+describe('plan/F4 — severe forward lean boundary at SEVERE_FORWARD_LEAN_DEG', () => {
+  it('EXACTLY SEVERE_FORWARD_LEAN_DEG does NOT refer (top of conventional+bore window)', () => {
+    // forward lean = leanDeg·cos(0) = SEVERE_FORWARD_LEAN_DEG, aligned with target.
+    const p = recommendPlan(
+      baseInput({ leanDeg: C.SEVERE_FORWARD_LEAN_DEG, leanAzimuth: 180, targetAzimuth: 180 }),
+    );
+    expect(p.verdict).not.toBe('refer-professional');
+    // It's the conventional + bore caution case.
+    const a = actionable(p);
+    expect(a.notch.type).toBe('conventional');
+    expect(a.backCut.boreCut).toBe(true);
+    expect(a.verdict).toBe('caution');
+  });
+
+  it('just ABOVE SEVERE_FORWARD_LEAN_DEG refers (strictly greater)', () => {
+    const p = recommendPlan(
+      baseInput({ leanDeg: C.SEVERE_FORWARD_LEAN_DEG + 0.01, leanAzimuth: 180, targetAzimuth: 180 }),
+    );
+    expect(p.verdict).toBe('refer-professional');
+    expect(p.reasons.some((r) => /lean/i.test(r))).toBe(true);
+  });
+
+  it('EXACTLY MAX_LEAN_AWAY_DEG does NOT refer; just above refers (away-lean boundary)', () => {
+    // away component = leanDeg·cos(0) when leaning straight back from target.
+    const at = recommendPlan(
+      baseInput({ leanDeg: C.MAX_LEAN_AWAY_DEG, leanAzimuth: 0, targetAzimuth: 180 }),
+    );
+    expect(at.verdict).not.toBe('refer-professional');
+    const above = recommendPlan(
+      baseInput({ leanDeg: C.MAX_LEAN_AWAY_DEG + 0.01, leanAzimuth: 0, targetAzimuth: 180 }),
+    );
+    expect(above.verdict).toBe('refer-professional');
+  });
+
+  it('EXACTLY MAX_DBH_CM does NOT refer; just above refers (DBH boundary)', () => {
+    expect(recommendPlan(baseInput({ dbhCm: C.MAX_DBH_CM })).verdict).not.toBe('refer-professional');
+    expect(recommendPlan(baseInput({ dbhCm: C.MAX_DBH_CM + 0.01 })).verdict).toBe('refer-professional');
+  });
+
+  it('EXACTLY MAX_WIND_KPH does NOT refer; just above refers (wind boundary)', () => {
+    expect(recommendPlan(baseInput({ windKph: C.MAX_WIND_KPH })).verdict).not.toBe('refer-professional');
+    expect(recommendPlan(baseInput({ windKph: C.MAX_WIND_KPH + 0.01 })).verdict).toBe('refer-professional');
   });
 });
 

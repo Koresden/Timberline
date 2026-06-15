@@ -120,12 +120,19 @@ export const WIND_STEERING_CONE_REDUCTION_FRACTION = 0.5;
  * for v1 — flagged for DB-1.
  *
  * Forward lean beyond the conventional window carries barber-chair risk that a
- * non-professional should not attempt, so we refer. Set equal to the top of the
- * conventional window (FORWARD_LEAN_CONVENTIONAL_MAX_DEG = 10°): forward lean
- * strictly greater than this refers. Source: HANDOFF §1 ("leaning heavily"),
+ * non-professional should not attempt, so we refer. Forward lean strictly greater
+ * than this refers; at exactly this value the tree is still the top of the
+ * conventional+bore caution window. Source: HANDOFF §1 ("leaning heavily"),
  * pending DB-1.
+ *
+ * F5 (Phase 4 audit): this is an INDEPENDENT literal (10°), deliberately NOT
+ * aliased to FORWARD_LEAN_CONVENTIONAL_MAX_DEG. The two share the value 10° today,
+ * but the conventional window max is a notch-technique comfort knob while this is a
+ * REFERRAL gate; coupling them meant a future change to the notch window would
+ * silently move a safety gate. They are decoupled so a notch-window edit can never
+ * drag the referral threshold with it. (Value unchanged — structural decouple only.)
  */
-export const SEVERE_FORWARD_LEAN_DEG = FORWARD_LEAN_CONVENTIONAL_MAX_DEG;
+export const SEVERE_FORWARD_LEAN_DEG = 10;
 
 // ── Escape routes ────────────────────────────────────────────────────────────
 // HANDOFF §2.2 rule 6 / §1. OSHA-style retreat: two routes ~45° back from the

@@ -204,6 +204,17 @@ export function recommendPlan(input: PlanInput): FellingPlan {
       'Dead or compromised tree: structural integrity is unpredictable — consult a professional.',
     );
   }
+  // F2 (Phase 4 audit): palms have no real hinge wood, so the open-face notch +
+  // 10%/80% hinge model the engine plans with does not physically apply. Emitting a
+  // timber cut card for a palm would be false authority. HANDOFF §1 lists
+  // 'palm-like' as a v1 class with no felling spec, so the honest, safe default is
+  // to refer (information-only), exactly like 'dead-compromised'.
+  if (input.speciesClass === 'palm-like') {
+    referReasons.push(
+      'Palm (or palm-like) tree: palms have no hinge wood, so the notch-and-hinge ' +
+        'technique does not apply — consult a professional.',
+    );
+  }
   if (input.windKph > C.MAX_WIND_KPH) {
     referReasons.push(
       `Wind ${input.windKph} kph exceeds the ${C.MAX_WIND_KPH} kph limit — wait for calmer ` +
@@ -218,7 +229,16 @@ export function recommendPlan(input: PlanInput): FellingPlan {
     notch.type === 'open-face' ? C.STEERING_CONE_OPEN_FACE_DEG : C.STEERING_CONE_CONVENTIONAL_DEG;
   const steeringConeDeg = windReducedCone(baseCone, input.windKph);
 
-  if (hazardNearFeasibleFallLine(input, steeringConeDeg)) {
+  // F1 (Phase 4 audit): the hazard sweep must NOT use the wind-reduced cone. Wind
+  // legitimately reduces TARGET feasibility (Rule 5, below) — fewer fall lines are
+  // achievable — but it must NOT shrink HAZARD detection: a smaller swept cone
+  // samples fewer azimuths, so a hazard the calm-day check would catch could be
+  // missed in wind, and the tree would receive cut specs. That is the unsafe
+  // direction. The hazard gate therefore sweeps the un-reduced (calm) BASE cone,
+  // which can only ever catch MORE hazards than the wind-reduced one. (If anything
+  // wind should WIDEN this sweep, mirroring the sim corridor; the calm base cone is
+  // the conservative minimum.)
+  if (hazardNearFeasibleFallLine(input, baseCone)) {
     referReasons.push(
       `A structure, power line, or road sits within ${C.HAZARD_REFERRAL_HEIGHT_MULT}× the tree ` +
         'height of a possible fall line — consult a professional.',
