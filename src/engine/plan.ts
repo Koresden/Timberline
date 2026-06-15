@@ -12,12 +12,14 @@
  * larger, safer margin. The engine never re-derives ΔH here.
  *
  * ## "When in doubt, refer."
- * Every gate widens the set of trees sent to a professional. The notch/hinge/
- * back-cut specs are still computed even in a referral state so the UI *can*
- * show "what a pro would assess", but the verdict is the load-bearing output:
- * the UI suppresses actionable specs when verdict === 'refer-professional'.
+ * Every gate widens the set of trees sent to a professional. Per DB-1 §4, a
+ * referral carries NO actionable cut specs: if ANY gate fires we return early
+ * with the `ReferralPlan` variant (danger radius + reasons only) and never
+ * compute notch/hinge/back-cut. The discriminated-union return type makes it
+ * impossible for a consumer to surface cut guidance for a refer-professional
+ * tree — defense-in-depth, not UI suppression.
  */
-import type { FellingPlan, PlanInput, NotchType } from './types';
+import type { FellingPlan, ReferralPlan, ActionablePlan, PlanInput, NotchType } from './types';
 import * as C from './constants';
 import { angleDiff, normalizeAzimuth, pointToRayDistanceM, DEG_TO_RAD } from './geometry';
 
@@ -146,7 +148,8 @@ interface NotchChoice {
 
 function selectNotch(forwardLeanDeg: number, reasons: string[]): NotchChoice {
   // Humboldt requires a ground-slope / low-stump input that v1's PlanInput does
-  // not carry — so it is never auto-selected here (flagged for DB-1).
+  // not carry — so it is never auto-selected here. DB-1 §3: Humboldt is
+  // DEFERRED TO v2 (no input field in v1); the path stays unreachable for now.
   if (
     forwardLeanDeg >= C.FORWARD_LEAN_CONVENTIONAL_MIN_DEG &&
     forwardLeanDeg <= C.FORWARD_LEAN_CONVENTIONAL_MAX_DEG
@@ -222,6 +225,21 @@ export function recommendPlan(input: PlanInput): FellingPlan {
     );
   }
 
+  // ── Danger radius (worst-case height; see header) ──────────────────────────────
+  const dangerRadiusM = C.DANGER_RADIUS_HEIGHT_MULT * input.heightM;
+
+  // ── Referral short-circuit (DB-1 §4) ──────────────────────────────────────────
+  // If ANY gate fired, return the referral variant NOW — no cut specs are
+  // computed or returned. `referReasons` already holds every gate that triggered.
+  if (referReasons.length > 0) {
+    const referral: ReferralPlan = {
+      verdict: 'refer-professional',
+      dangerRadiusM,
+      reasons: referReasons,
+    };
+    return referral;
+  }
+
   // ── Rule 3 — hinge ──────────────────────────────────────────────────────────
   const hingeThicknessCm = Math.max(
     input.dbhCm * C.HINGE_THICKNESS_DBH_FRACTION,
@@ -269,27 +287,15 @@ export function recommendPlan(input: PlanInput): FellingPlan {
       'behind the tree.',
   );
 
-  // ── Danger radius (worst-case height; see header) ──────────────────────────────
-  const dangerRadiusM = C.DANGER_RADIUS_HEIGHT_MULT * input.heightM;
-
-  // ── Verdict ────────────────────────────────────────────────────────────────────
+  // ── Verdict (non-referral branch only; referrals returned above) ────────────────
   // 'caution' is reserved for genuinely ADVANCED / edge selections: a bore cut, a
   // wedge needed to lift a back lean, or a target the hinge cannot reach. A plain
   // large-diameter wedge prompt (DBH ≥ threshold, no back lean) is routine and
   // does NOT downgrade an otherwise-clean fell. (Humboldt is unreachable in v1.)
-  let verdict: FellingPlan['verdict'];
-  if (referReasons.length > 0) {
-    verdict = 'refer-professional';
-  } else if (notch.caution || hasBackLean || !feas.feasible) {
-    verdict = 'caution';
-  } else {
-    verdict = 'ok';
-  }
+  const verdict: ActionablePlan['verdict'] =
+    notch.caution || hasBackLean || !feas.feasible ? 'caution' : 'ok';
 
-  // Referral reasons lead the list so they surface first in the UI.
-  const allReasons = [...referReasons, ...reasons];
-
-  return {
+  const plan: ActionablePlan = {
     verdict,
     notch: { type: notch.type, openingDeg: notch.openingDeg, depthCm: input.dbhCm * C.NOTCH_DEPTH_DBH_FRACTION },
     hinge: { thicknessCm: hingeThicknessCm, lengthCm: hingeLengthCm },
@@ -298,6 +304,7 @@ export function recommendPlan(input: PlanInput): FellingPlan {
     steeringConeDeg,
     escapeAzimuths,
     dangerRadiusM,
-    reasons: allReasons,
+    reasons,
   };
+  return plan;
 }

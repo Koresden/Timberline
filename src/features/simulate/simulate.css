@@ -1,0 +1,292 @@
+/**
+ * Simulate view styles (Phase 3). All colours come from CSS variables in
+ * index.css (re-theme-ready) — no hardcoded hex here.
+ */
+
+.sim-screen h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+/* ── Empty / information-only state ──────────────────────────────────────────── */
+.sim-empty {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+.sim-empty-title {
+  margin: 0 0 0.4rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.sim-empty-body {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* ── Shared section chrome ───────────────────────────────────────────────────── */
+.sim-topview,
+.sim-sideview {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+}
+.sim-topview-head,
+.sim-sideview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+.sim-topview-head h3,
+.sim-sideview-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Diagram panels (SPEC §9): diagram-fill background, 1px border, radius 18. */
+.sim-topview-svg,
+.sim-sideview svg {
+  background: var(--diagram-fill);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  display: block;
+}
+.sim-topview-svg {
+  touch-action: none; /* let pointer-drag own the gesture, not the page scroll */
+}
+
+/* ── Danger zone ring (SPEC §9) ──────────────────────────────────────────────
+   Calm/clear: neutral dashed diagram stroke, NO red fill. Red (--danger) is
+   reserved strictly for a real breach. Breached: --danger 1.6px stroke + ~14%
+   --danger fill, driven off the live conflict result (is-breached). */
+.sim-danger-ring {
+  fill: none;
+  stroke: var(--diagram-stroke);
+  stroke-width: 1.5;
+}
+.sim-danger-ring.is-breached {
+  stroke: var(--danger);
+  stroke-width: 1.6;
+  fill: var(--danger);
+  fill-opacity: 0.14;
+  animation: sim-ring-pulse 1.6s ease-out infinite;
+}
+
+@keyframes sim-ring-pulse {
+  0% {
+    stroke-opacity: 1;
+  }
+  50% {
+    stroke-opacity: 0.5;
+  }
+  100% {
+    stroke-opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sim-danger-ring.is-breached {
+    animation: none;
+    stroke-width: 2;
+  }
+}
+
+/* Mono map labels / readouts (SPEC §9/§7): mono, ~10–11px, muted. */
+.sim-map-label {
+  fill: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+/* ── Verdict pill ────────────────────────────────────────────────────────────── */
+.sim-verdict {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+}
+.sim-verdict--clear {
+  color: var(--ok-border);
+  background: var(--ok-bg);
+  border-color: var(--ok-border);
+}
+.sim-verdict--blocked {
+  color: var(--danger);
+  background: var(--danger-fill);
+  border-color: var(--danger);
+}
+
+/* ── Obstacles ───────────────────────────────────────────────────────────────── */
+.sim-obstacle > rect,
+.sim-obstacle > circle {
+  fill: var(--diagram-fill);
+  stroke: var(--diagram-stroke);
+  stroke-width: 1.5;
+}
+.sim-obstacle-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  fill: var(--fg);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Conflicting obstacle: pulse red (animation on --danger). */
+.sim-obstacle.is-conflict > rect,
+.sim-obstacle.is-conflict > circle {
+  fill: var(--danger-fill);
+  stroke: var(--danger);
+  stroke-width: 2.5;
+  animation: sim-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes sim-pulse {
+  0%,
+  100% {
+    stroke-opacity: 1;
+    fill-opacity: 1;
+  }
+  50% {
+    stroke-opacity: 0.35;
+    fill-opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sim-obstacle.is-conflict > rect,
+  .sim-obstacle.is-conflict > circle {
+    animation: none;
+    stroke-width: 3;
+  }
+}
+
+/* ── Add / list controls ─────────────────────────────────────────────────────── */
+.sim-obstacle-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+.sim-obstacle-bar-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.sim-add-btn {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
+}
+.sim-obstacle-list {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+}
+.sim-obstacle-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+.sim-obstacle-list li.is-conflict {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* ── Legend ──────────────────────────────────────────────────────────────────── */
+.sim-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.legend--corridor::before {
+  background: var(--accent);
+  opacity: 0.5;
+}
+.legend--bounce::before {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--diagram-stroke),
+    var(--diagram-stroke) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+/* Danger-ring legend swatch mirrors the map: neutral when calm, red on breach. */
+.sim-legend-ring::before {
+  content: '';
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  background: transparent;
+  border: 1px dashed var(--diagram-stroke);
+}
+.sim-legend-ring.is-breached::before {
+  border-color: var(--danger);
+  background: var(--danger-fill);
+}
+.sim-legend-ring.is-breached {
+  color: var(--danger);
+  font-weight: 600;
+}
+.sim-legend-hint {
+  flex-basis: 100%;
+  font-style: italic;
+}
+
+/* ── Side view ───────────────────────────────────────────────────────────────── */
+.sim-phase {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+}
+.sim-phase--idle {
+  color: var(--muted);
+}
+.sim-phase--hold {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.sim-phase--free {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.sim-sideview-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.sim-angle {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+}
+.sim-caption {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}

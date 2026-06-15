@@ -9,6 +9,12 @@ playwright-report
 test-results
 .playwright
 
+# local dev tooling (preview-harness launch config — recreated on demand)
+.claude/launch.json
+
+# design source archive — contents are extracted into design/
+timberlinevisual.zip
+
 # editor / OS
 .DS_Store
 *.log

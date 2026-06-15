@@ -45,8 +45,31 @@ export type Verdict = 'ok' | 'caution' | 'refer-professional';
 
 export type NotchType = 'open-face' | 'conventional' | 'humboldt';
 
-export interface FellingPlan {
-  verdict: Verdict;
+/**
+ * Referral result (DB-1 §4). When any referral gate fires, the engine returns
+ * ONLY this variant — it carries NO actionable cut specs (no notch/hinge/back
+ * cut/fall direction/steering cone/escape routes). This makes it impossible at
+ * the type level for a consumer to surface cut guidance for a tree that must go
+ * to a professional; defense-in-depth, not UI suppression.
+ *
+ * `dangerRadiusM` is retained so the UI's information-only mode can still draw
+ * the 2× tree-height danger zone, and `reasons` so it can explain every gate
+ * that triggered the referral.
+ */
+export interface ReferralPlan {
+  verdict: 'refer-professional';
+  /** 2 × (height + ΔH). */
+  dangerRadiusM: number;
+  /** Every referral gate that fired, human-readable, for the UI's "why" list. */
+  reasons: string[];
+}
+
+/**
+ * Actionable result (DB-1 §4). Returned only when NO referral gate fired, so a
+ * full set of cut specs is safe to surface.
+ */
+export interface ActionablePlan {
+  verdict: 'ok' | 'caution';
   notch: { type: NotchType; openingDeg: number; depthCm: number };
   hinge: { thicknessCm: number; lengthCm: number };
   backCut: { offsetCm: number; boreCut: boolean; wedges: number };
@@ -59,6 +82,13 @@ export interface FellingPlan {
   /** Every rule that fired, human-readable, for the UI's "why" list. */
   reasons: string[];
 }
+
+/**
+ * The plan contract is a discriminated union on `verdict` (DB-1 §4). Narrow on
+ * `verdict` (or `'notch' in plan`) before touching cut specs — a referral plan
+ * simply does not have them.
+ */
+export type FellingPlan = ReferralPlan | ActionablePlan;
 
 // ── Measurement (HANDOFF §2.1) ───────────────────────────────────────────────
 

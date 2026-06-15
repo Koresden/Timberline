@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { checkCorridor, buildCorridor, type Obstacle } from '../../src/engine/sim';
-import type { FellingPlan } from '../../src/engine/types';
+import type { ActionablePlan } from '../../src/engine/types';
 import * as C from '../../src/engine/constants';
 
 /**
@@ -14,7 +14,7 @@ import * as C from '../../src/engine/constants';
  */
 
 /** A plan that falls due NORTH (0°), 20 m worst-case footprint, 5° steering cone. */
-function northPlan(overrides: Partial<FellingPlan> = {}): FellingPlan {
+function northPlan(overrides: Partial<ActionablePlan> = {}): ActionablePlan {
   return {
     verdict: 'ok',
     notch: { type: 'open-face', openingDeg: 70, depthCm: 10 },

@@ -1,0 +1,14 @@
+{
+  "name": "Timberline — Tree Felling Assistant",
+  "short_name": "Timberline",
+  "description": "Mobile-first planning aid for felling a tree. Planning aid, not authorization.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E1311",
+  "theme_color": "#0E1311",
+  "icons": [
+    { "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any maskable" }
+  ]
+}

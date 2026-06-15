@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #E7EAE5; }
+    ::selection { background: #FF6A1F; color: #160A02; }
+  </style>
+</helmet>
+
+<div style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #131815; background: #E7EAE5; min-height: 100vh; padding: 56px 40px 96px;">
+  <div style="max-width: 1180px; margin: 0 auto;">
+
+    <!-- ============ HEADER ============ -->
+    <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 8px;">
+      <div style="width: 64px; height: 64px; border-radius: 18px; background: linear-gradient(180deg,#1A241E,#0E1311); position: relative; flex: none; box-shadow: 0 6px 18px rgba(8,12,10,.18);">
+        <svg viewBox="0 0 512 512" style="width: 100%; height: 100%;">
+          <line x1="96" y1="430" x2="416" y2="430" stroke="#2E372F" stroke-width="8" stroke-linecap="round"/>
+          <line x1="96" y1="430" x2="214" y2="430" stroke="#36D17C" stroke-width="8" stroke-linecap="round"/>
+          <g fill="#ECF1ED">
+            <path d="M256 70 L338 184 L174 184 Z"/>
+            <path d="M256 142 L370 268 L142 268 Z"/>
+            <path d="M256 222 L402 366 L110 366 Z"/>
+          </g>
+          <path d="M256 366 L256 300 L154 366 Z" fill="#FF6A1F"/>
+          <rect x="240" y="366" width="32" height="34" rx="4" fill="#ECF1ED"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -0.01em; line-height: 1;">TIMBERLINE</div>
+        <div style="color: #5B655D; font-size: 14px; margin-top: 5px; letter-spacing: 0.01em;">Tree felling, measured and planned. &nbsp;·&nbsp; Design system v1</div>
+      </div>
+    </div>
+
+    <div style="height: 1px; background: #CDD3CB; margin: 28px 0 40px;"></div>
+
+    <!-- ============ COLOR: TWO THEMES ============ -->
+    <div style="font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.12em; color: #5B655D; text-transform: uppercase; margin-bottom: 18px;">Color · Light &amp; Dark</div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 48px;">
+
+      <!-- LIGHT panel -->
+      <div style="border-radius: 20px; overflow: hidden; border: 1px solid #DCE2DB; background: #F3F5F1; box-shadow: 0 6px 18px rgba(8,12,10,.06);">
+        <div style="padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #DCE2DB;">
+          <span style="font-weight: 600; font-size: 15px;">Light</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B655D;">data-theme="light"</span>
+        </div>
+        <div style="padding: 20px;">
+          <sc-for list="{{ lightGroups }}" as="grp" hint-placeholder-count="4">
+            <div style="margin-bottom: 16px;">
+              <div style="font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #5B655D; margin-bottom: 8px; font-weight: 600;">{{ grp.name }}</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <sc-for list="{{ grp.items }}" as="sw" hint-placeholder-count="5">
+                  <div style="width: 92px;">
+                    <div style="{{ sw.box }}"></div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #131815; margin-top: 5px; line-height: 1.3;">{{ sw.token }}</div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8A958D; line-height: 1.3;">{{ sw.hex }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- DARK panel -->
+      <div style="border-radius: 20px; overflow: hidden; border: 1px solid #2A322D; background: #0E1311; box-shadow: 0 12px 30px rgba(8,12,10,.22);">
+        <div style="padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2A322D; color: #ECF1ED;">
+          <span style="font-weight: 600; font-size: 15px;">Dark</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A958D;">data-theme="dark"</span>
+        </div>
+        <div style="padding: 20px;">
+          <sc-for list="{{ darkGroups }}" as="grp" hint-placeholder-count="4">
+            <div style="margin-bottom: 16px;">
+              <div style="font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A958D; margin-bottom: 8px; font-weight: 600;">{{ grp.name }}</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <sc-for list="{{ grp.items }}" as="sw" hint-placeholder-count="5">
+                  <div style="width: 92px;">
+                    <div style="{{ sw.box }}"></div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #ECF1ED; margin-top: 5px; line-height: 1.3;">{{ sw.token }}</div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8A958D; line-height: 1.3;">{{ sw.hex }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TYPE ============ -->
+    <div style="font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.12em; color: #5B655D; text-transform: uppercase; margin-bottom: 18px;">Typography</div>
+    <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; margin-bottom: 48px;">
+      <div style="background: #FFFFFF; border: 1px solid #DCE2DB; border-radius: 20px; padding: 28px 30px; box-shadow: 0 6px 18px rgba(8,12,10,.06);">
+        <div style="display: flex; align-items: baseline; gap: 12px; border-bottom: 1px solid #ECEFEA; padding-bottom: 16px; margin-bottom: 16px;">
+          <span style="font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 52px; letter-spacing: -0.01em; line-height: 1;">21.4</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 18px; color: #5B655D;">m</span>
+          <span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A958D;">Archivo 800 · readout</span>
+        </div>
+        <div style="font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 28px; letter-spacing: -0.01em; margin-bottom: 4px;">Screen title — Plan the fall</div>
+        <div style="font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 22px; color: #2C332D; margin-bottom: 14px;">Section · Escape routes</div>
+        <div style="font-size: 15px; color: #2C332D; max-width: 46ch; line-height: 1.5;">Body copy uses IBM Plex Sans at 15px. Legible at arm's length, in gloves, in glare. Keep instructions short and unambiguous — this is safety equipment.</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5B655D; margin-top: 14px; background: #F3F5F1; border-radius: 8px; padding: 10px 12px;">DBH 48cm · LEAN 6° NE · WT 1.9t · WIND 12km/h</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #DCE2DB; border-radius: 20px; padding: 28px 30px; box-shadow: 0 6px 18px rgba(8,12,10,.06);">
+        <sc-for list="{{ typeRamp }}" as="t" hint-placeholder-count="6">
+          <div style="display: flex; align-items: baseline; gap: 12px; padding: 7px 0; border-bottom: 1px solid #F1F3EF;">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A958D; width: 72px; flex: none;">{{ t.name }}</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A958D; width: 42px; flex: none;">{{ t.size }}</span>
+            <span style="{{ t.style }}">Felling</span>
+          </div>
+        </sc-for>
+        <div style="margin-top: 16px; display: flex; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5B655D;">
+          <span>Display: Archivo</span><span>UI: Plex Sans</span><span>Data: Plex Mono</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ COMPONENTS ============ -->
+    <div style="font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.12em; color: #5B655D; text-transform: uppercase; margin-bottom: 18px;">Components</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 48px;">
+
+      <!-- buttons + chips -->
+      <div style="background: #FFFFFF; border: 1px solid #DCE2DB; border-radius: 20px; padding: 26px; box-shadow: 0 6px 18px rgba(8,12,10,.06);">
+        <div style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A958D; margin-bottom: 14px; font-weight: 600;">Buttons</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px;">
+          <div style="height: 48px; padding: 0 22px; display: flex; align-items: center; border-radius: 12px; background: #DB5410; color: #fff; font-weight: 600; font-size: 15px;">Continue to Plan</div>
+          <div style="height: 48px; padding: 0 22px; display: flex; align-items: center; border-radius: 12px; background: #FFFFFF; border: 1.5px solid #DCE2DB; color: #131815; font-weight: 600; font-size: 15px;">Re-measure</div>
+          <div style="height: 48px; padding: 0 22px; display: flex; align-items: center; border-radius: 12px; background: #CE1A0E; color: #fff; font-weight: 600; font-size: 15px;">Stop</div>
+          <div style="height: 48px; padding: 0 18px; display: flex; align-items: center; border-radius: 12px; color: #5B655D; font-weight: 600; font-size: 15px;">Skip</div>
+        </div>
+        <div style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A958D; margin-bottom: 14px; font-weight: 600;">Safety status chips</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+          <div style="display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 999px; background: #E1F4E9; border: 1px solid #A4D9BB; color: #0E8F4F; font-weight: 600; font-size: 13px;"><span style="width: 8px; height: 8px; border-radius: 999px; background: #0E8F4F;"></span>Escape route clear</div>
+          <div style="display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 999px; background: #FCEFCF; border: 1px solid #F1D593; color: #8A5600; font-weight: 600; font-size: 13px;"><span style="width: 8px; height: 8px; border-radius: 999px; background: #C08A12;"></span>Side-lean 4°</div>
+          <div style="display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 999px; background: #FFF2D2; border: 1px solid #F0CD76; color: #8A5600; font-weight: 600; font-size: 13px;"><span style="width: 8px; height: 8px; border-radius: 999px; background: #C08A12;"></span>Wind 18 km/h</div>
+          <div style="display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 999px; background: #FBE3E0; border: 1px solid #E9A89F; color: #CE1A0E; font-weight: 600; font-size: 13px;"><span style="width: 8px; height: 8px; border-radius: 999px; background: #CE1A0E;"></span>Power line 12 m</div>
+        </div>
+      </div>
+
+      <!-- diagram + radii -->
+      <div style="background: #FFFFFF; border: 1px solid #DCE2DB; border-radius: 20px; padding: 26px; box-shadow: 0 6px 18px rgba(8,12,10,.06);">
+        <div style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A958D; margin-bottom: 14px; font-weight: 600;">Diagram tokens</div>
+        <div style="display: flex; gap: 16px; align-items: center;">
+          <div style="width: 150px; height: 120px; border-radius: 12px; background: #E8EEE7; border: 1px solid #DCE2DB; position: relative; overflow: hidden;">
+            <svg viewBox="0 0 150 120" style="position:absolute; inset:0; width:100%; height:100%;">
+              <circle cx="75" cy="64" r="46" fill="none" stroke="#97AB9D" stroke-width="1.5" stroke-dasharray="4 4"/>
+              <path d="M75 64 L75 18" stroke="#97AB9D" stroke-width="1.5"/>
+              <path d="M75 64 L116 40" stroke="#DB5410" stroke-width="3"/>
+              <circle cx="75" cy="64" r="5" fill="#DB5410"/>
+              <path d="M75 64 L46 96 M75 64 L104 96" stroke="#0E8F4F" stroke-width="2" stroke-dasharray="3 3"/>
+            </svg>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5B655D; line-height: 1.85;">
+              <div><span style="display:inline-block;width:10px;height:10px;background:#E8EEE7;border:1px solid #97AB9D;border-radius:2px;margin-right:6px;vertical-align:-1px;"></span>--diagram-fill</div>
+              <div><span style="display:inline-block;width:10px;height:10px;background:#97AB9D;border-radius:2px;margin-right:6px;vertical-align:-1px;"></span>--diagram-stroke</div>
+              <div><span style="display:inline-block;width:10px;height:10px;background:#DB5410;border-radius:2px;margin-right:6px;vertical-align:-1px;"></span>--accent · fell line</div>
+              <div><span style="display:inline-block;width:10px;height:10px;background:#0E8F4F;border-radius:2px;margin-right:6px;vertical-align:-1px;"></span>--safe · escape</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A958D; margin: 20px 0 12px; font-weight: 600;">Radii</div>
+        <div style="display: flex; gap: 10px; align-items: flex-end;">
+          <sc-for list="{{ radii }}" as="r" hint-placeholder-count="5">
+            <div style="text-align: center;">
+              <div style="{{ r.box }}"></div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #5B655D; margin-top: 6px;">{{ r.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PALETTE EXPLORATIONS ============ -->
+    <div style="font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.12em; color: #5B655D; text-transform: uppercase; margin-bottom: 6px;">Accent explorations</div>
+    <div style="color: #5B655D; font-size: 14px; margin-bottom: 18px;">Shipped direction is <strong style="color:#131815;">Pine + Chainsaw Orange</strong>. Two alternates if you want to compare.</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px;">
+      <sc-for list="{{ palettes }}" as="p" hint-placeholder-count="3">
+        <div style="{{ p.card }}">
+          <div style="padding: 16px 18px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="{{ p.title }}">{{ p.name }}</span>
+              <sc-if value="{{ p.shipped }}" hint-placeholder-val="{{ true }}">
+                <span style="margin-left:auto; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; background: #FF6A1F; color: #160A02; padding: 3px 8px; border-radius: 999px;">Shipped</span>
+              </sc-if>
+            </div>
+            <div style="display: flex; gap: 6px; margin-top: 14px;">
+              <sc-for list="{{ p.swatches }}" as="c" hint-placeholder-count="5">
+                <div style="{{ c.box }}"></div>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 14px;">
+              <div style="{{ p.btn }}">Fell here</div>
+              <div style="{{ p.chip }}"><span style="width:7px;height:7px;border-radius:999px;background:#FF463A;"></span>Danger</div>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const box = "height:44px;border-radius:8px;border:1px solid rgba(127,127,127,.28);";
+    const sw = (token, hex) => ({ token, hex, box: box + "background:" + hex + ";" });
+    return {
+      lightGroups: [
+        { name: "Base", items: [ sw("--bg","#F3F5F1"), sw("--surface","#FFFFFF"), sw("--surface-2","#FAFBF8"), sw("--fg","#131815"), sw("--muted","#5B655D"), sw("--border","#DCE2DB") ] },
+        { name: "Brand / action", items: [ sw("--accent","#DB5410"), sw("--accent-fg","#FFFFFF") ] },
+        { name: "Safety semantics", items: [ sw("--danger","#CE1A0E"), sw("--danger-fill","#FBE3E0"), sw("--safe","#0E8F4F"), sw("--warn-fg","#8A5600"), sw("--warn-bg","#FFF2D2"), sw("--ok-bg","#E1F4E9"), sw("--caution-bg","#FCEFCF") ] },
+        { name: "Diagram", items: [ sw("--diagram-fill","#E8EEE7"), sw("--diagram-stroke","#97AB9D") ] },
+      ],
+      darkGroups: [
+        { name: "Base", items: [ sw("--bg","#0E1311"), sw("--surface","#161C19"), sw("--surface-2","#1E2521"), sw("--fg","#ECF1ED"), sw("--muted","#8A958D"), sw("--border","#2A322D") ] },
+        { name: "Brand / action", items: [ sw("--accent","#FF6A1F"), sw("--accent-fg","#160A02") ] },
+        { name: "Safety semantics", items: [ sw("--danger","#FF463A"), sw("--danger-fill","#2C100D"), sw("--safe","#36D17C"), sw("--warn-fg","#FFC53D"), sw("--warn-bg","#36280A"), sw("--ok-bg","#0E2A1C"), sw("--caution-bg","#2E2406") ] },
+        { name: "Diagram", items: [ sw("--diagram-fill","#1C2622"), sw("--diagram-stroke","#5E7A68") ] },
+      ],
+      typeRamp: [
+        { name: "display", size: "52", style: "font-family:'Archivo',sans-serif;font-weight:800;font-size:34px;letter-spacing:-0.01em;" },
+        { name: "2xl", size: "28", style: "font-family:'Archivo',sans-serif;font-weight:700;font-size:26px;" },
+        { name: "xl", size: "22", style: "font-family:'Archivo',sans-serif;font-weight:600;font-size:21px;" },
+        { name: "lg", size: "17", style: "font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:17px;" },
+        { name: "base", size: "15", style: "font-family:'IBM Plex Sans',sans-serif;font-weight:500;font-size:15px;" },
+        { name: "mono", size: "13", style: "font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:14px;" },
+      ],
+      radii: [
+        { label: "sm 6", box: "width:56px;height:44px;background:#EEF1EC;border:1.5px solid #C9D0C7;border-radius:6px;" },
+        { label: "md 10", box: "width:56px;height:44px;background:#EEF1EC;border:1.5px solid #C9D0C7;border-radius:10px;" },
+        { label: "lg 16", box: "width:56px;height:44px;background:#EEF1EC;border:1.5px solid #C9D0C7;border-radius:16px;" },
+        { label: "xl 22", box: "width:56px;height:44px;background:#EEF1EC;border:1.5px solid #C9D0C7;border-radius:22px;" },
+        { label: "pill", box: "width:56px;height:44px;background:#EEF1EC;border:1.5px solid #C9D0C7;border-radius:999px;" },
+      ],
+      palettes: this.buildPalettes(),
+    };
+  }
+
+  buildPalettes() {
+    const cbox = (hex) => ({ box: "flex:1;height:40px;border-radius:7px;background:" + hex + ";" });
+    const cardBase = "border-radius:18px;overflow:hidden;border:1px solid #2A322D;";
+    const titleBase = "font-family:'Archivo',sans-serif;font-weight:700;font-size:16px;";
+    const btnBase = "height:38px;padding:0 16px;display:flex;align-items:center;border-radius:10px;font-weight:600;font-size:13px;";
+    const chipBase = "height:38px;padding:0 14px;display:flex;align-items:center;border-radius:10px;font-weight:600;font-size:13px;gap:6px;background:#2C100D;color:#FF8A7E;border:1px solid #5A211B;";
+    return [
+      {
+        name: "Pine + Orange", shipped: true,
+        card: cardBase + "background:#0E1311;",
+        title: titleBase + "color:#ECF1ED;",
+        swatches: ["#0E1311","#1E2521","#FF6A1F","#36D17C","#FF463A"].map(cbox),
+        btn: btnBase + "background:#FF6A1F;color:#160A02;",
+        chip: chipBase,
+      },
+      {
+        name: "Charcoal + Amber", shipped: false,
+        card: cardBase + "background:#121212;",
+        title: titleBase + "color:#F4F4F2;",
+        swatches: ["#121212","#222220","#FFB020","#46C26A","#FF463A"].map(cbox),
+        btn: btnBase + "background:#FFB020;color:#1A1300;",
+        chip: chipBase,
+      },
+      {
+        name: "Slate + Orange", shipped: false,
+        card: cardBase + "background:#10161C;",
+        title: titleBase + "color:#E9EEF2;",
+        swatches: ["#10161C","#1C2530","#FF6A1F","#33C9C2","#FF463A"].map(cbox),
+        btn: btnBase + "background:#FF6A1F;color:#160A02;",
+        chip: chipBase,
+      },
+    ];
+  }
+}
+</script>
+</body>
+</html>

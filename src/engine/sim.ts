@@ -15,7 +15,7 @@
  * cap of the wedge), we round so the tested region is never SMALLER than the
  * true one. Catching a spurious obstacle is acceptable; missing a real one is not.
  */
-import type { FellingPlan } from './types';
+import type { ActionablePlan } from './types';
 import * as C from './constants';
 import { DEG_TO_RAD } from './geometry';
 
@@ -61,12 +61,16 @@ interface Vec {
  * - Half-angle = steeringConeDeg + uncertainty bonus, where the bonus is
  *   CORRIDOR_UNCERTAINTY_BASE_DEG plus per-degree-of-lean and per-kph-of-wind
  *   terms. `checkCorridor` calls this with lean/wind = 0, applying only the
- *   conservative base bonus, because a `FellingPlan` alone does not carry lean
- *   or wind. A caller that still has the raw inputs may pass them for a wider,
- *   even more conservative wedge.
+ *   conservative base bonus, because an `ActionablePlan` alone does not carry
+ *   lean or wind. A caller that still has the raw inputs may pass them for a
+ *   wider, even more conservative wedge.
+ *
+ * Takes an `ActionablePlan` (DB-1 §4): a referral has no fall direction or
+ * corridor, so the union is narrowed at the seam — only actionable plans are
+ * simulated.
  */
 export function buildCorridor(
-  plan: FellingPlan,
+  plan: ActionablePlan,
   residualLeanDeg = 0,
   windKph = 0,
 ): Corridor {
@@ -214,7 +218,7 @@ function obstacleIntersectsWedge(obstacle: Obstacle, wedge: Vec[], axisAzimuth: 
  * Obstacles intersecting the fall corridor (including the bounce/roll zone).
  * Pure: inputs in, conflicts out.
  */
-export function checkCorridor(plan: FellingPlan, obstacles: Obstacle[]): CorridorCheck {
+export function checkCorridor(plan: ActionablePlan, obstacles: Obstacle[]): CorridorCheck {
   const corridor = buildCorridor(plan);
   const wedge = wedgePolygon(corridor.halfAngleDeg, corridor.lengthM);
   const conflicts = obstacles.filter((o) =>
