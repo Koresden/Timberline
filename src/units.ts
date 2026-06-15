@@ -49,8 +49,15 @@ export function mphToKph(mph: number): number {
   return mph * KPH_PER_MPH;
 }
 
-/** Which physical quantity a value represents — picks the conversion + label. */
-export type Quantity = 'distance' | 'diameter' | 'speed';
+/**
+ * Which physical quantity a value represents — picks the conversion + label.
+ *
+ * `diameter` vs `cut` share the cm/in units but differ in display precision and
+ * intent (finding D): `diameter` is the trunk DBH, a large measured value shown
+ * in whole cm; `cut` is a small notch/hinge/back-cut spec, shown to 1 decimal so
+ * a 3.5 cm hinge never rounds up to an overstated "4 cm".
+ */
+export type Quantity = 'distance' | 'diameter' | 'speed' | 'cut';
 
 interface UnitSpec {
   /** SI → display value. */
@@ -76,6 +83,13 @@ const UNIT_TABLE: Record<Quantity, Record<UnitSystem, UnitSpec>> = {
   },
   diameter: {
     metric: { toDisplay: (cm) => cm, toSI: (cm) => cm, label: 'cm', decimals: 0 },
+    imperial: { toDisplay: cmToIn, toSI: inToCm, label: 'in', decimals: 1 },
+  },
+  // Cut specs (notch depth, hinge thickness/length, back-cut offset): same units
+  // as diameter but always 1 decimal, so small dimensions aren't overstated by
+  // whole-cm rounding (finding D — a 3.5 cm hinge must not read "4 cm").
+  cut: {
+    metric: { toDisplay: (cm) => cm, toSI: (cm) => cm, label: 'cm', decimals: 1 },
     imperial: { toDisplay: cmToIn, toSI: inToCm, label: 'in', decimals: 1 },
   },
   speed: {
