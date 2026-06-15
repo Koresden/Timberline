@@ -1,7 +1,7 @@
 # DB-1 — Phase 1 Decision Brief (Engine)
 
 **Phase:** 1 (Domain engine, TDD) · **Author:** orchestrator · **Implementer:** engine-dev
-**For approval by:** Daniel · **Status:** ⏳ awaiting sign-off — **Phase 2 (UI) does not start until this is approved.**
+**For approval by:** Daniel · **Status:** ✅ APPROVED (2026-06-14) — recommended options adopted; see decisions below.
 
 The pure engine (`measure` · `plan` · `sim`) is implemented and independently
 verified. This brief asks you to (1) **sanity-check the fixture math**, (2) confirm
@@ -134,9 +134,14 @@ the Phase-2 store + an e2e assertion (qa, Phase 4).
 
 ---
 
-### Sign-off
-- [ ] 1 — Fixture math sane
-- [ ] 2 — Ambiguity interpretations (2a–2e) + new constants approved
-- [ ] 3 — Humboldt decision made
-- [ ] 4 — Referral-suppression hardening decision made
-- [ ] **Phase 2 (ui-dev) cleared to start**
+### Sign-off — APPROVED 2026-06-14
+- [x] **1 — Fixture math sane** (accepted as computed).
+- [x] **2 — Ambiguity interpretations 2a–2e + the 6 new constants approved** as implemented
+  (away-axis projection; severe forward lean refers; 50%-at-limit wind reduction;
+  corridor bonus formula; full feasible-cone sweep).
+- [x] **3 — Humboldt → deferred to v2.** No input added now; the path stays unreachable
+  in v1 (a `groundSlopeDeg`/low-stump input remains a v2 option). No code change.
+- [x] **4 — Harden the engine (recommended).** `FellingPlan` becomes a discriminated
+  union so a `refer-professional` result carries **no** cut specs. This lands now,
+  before Phase 2 wires anything up.
+- [x] **Phase 2 (ui-dev) cleared to start** — after the #4 hardening lands and re-verifies.

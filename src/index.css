@@ -1,36 +1,194 @@
-:root {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  line-height: 1.5;
-  color-scheme: light dark;
+/* ============================================================
+   Timberline — Design Tokens (Phase 3.5 visual integration)
+   Source of truth: design/tokens.reference.css + design/SPEC.md.
+   Rugged technical field instrument. Pine base, chainsaw-orange
+   brand accent, red reserved for danger, signal-green for safe.
+   Ships light + dark; dark is the on-site primary (auto via
+   prefers-color-scheme; explicit data-theme overrides).
+   ============================================================ */
 
-  --bg: #faf9f6;
-  --fg: #1c1b18;
-  --warn-bg: #fff4d6;
-  --warn-fg: #5a3e00;
-  --warn-border: #d9a300;
-  --muted: #6b6a66;
+/* ---- Self-hosted fonts (public/fonts/*.woff2) ---- */
+@font-face {
+  font-family: 'Archivo';
+  src: url('/fonts/archivo-var.woff2') format('woff2');
+  font-weight: 400 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/plex-sans-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/plex-sans-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/plex-sans-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/plex-mono-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
 }
 
+:root {
+  /* ---- Type ---- */
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: 'Archivo', 'IBM Plex Sans', system-ui, sans-serif;
+
+  --text-xs: 0.75rem; /* 12 — micro labels */
+  --text-sm: 0.8125rem; /* 13 — captions */
+  --text-base: 0.9375rem; /* 15 — body / UI */
+  --text-lg: 1.0625rem; /* 17 — emphasis */
+  --text-xl: 1.375rem; /* 22 — section titles */
+  --text-2xl: 1.75rem; /* 28 — screen titles */
+  --text-3xl: 2.25rem; /* 36 — primary readouts */
+  --text-display: 3.25rem; /* 52 — hero measurement */
+
+  --tracking-tight: -0.01em;
+  --tracking-wide: 0.04em;
+  --tracking-caps: 0.12em; /* uppercase micro labels */
+
+  /* ---- Radii ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+
+  /* ---- Spacing scale ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* ---- Elevation ---- */
+  --shadow-sm: 0 1px 2px rgba(8, 12, 10, 0.06);
+  --shadow-md: 0 6px 18px rgba(8, 12, 10, 0.1);
+  --shadow-lg: 0 18px 48px rgba(8, 12, 10, 0.16);
+
+  /* Hit target floor for gloved use */
+  --hit: 48px;
+}
+
+/* ============================================================
+   LIGHT — bright sun / desk planning. Paper-cool, high contrast.
+   ============================================================ */
+:root,
+:root[data-theme='light'] {
+  --bg: #f3f5f1;
+  --surface: #ffffff;
+  --surface-2: #fafbf8;
+  --fg: #131815;
+  --muted: #5b655d;
+  --border: #dce2db;
+
+  --accent: #db5410; /* chainsaw orange, deepened for white-bg contrast */
+  --accent-fg: #ffffff;
+
+  --danger: #ce1a0e;
+  --danger-fill: #fbe3e0;
+  --safe: #0e8f4f;
+  --warn-bg: #fff2d2;
+  --warn-fg: #8a5600;
+  --warn-border: #f0cd76;
+  --ok-bg: #e1f4e9;
+  --ok-border: #a4d9bb;
+  --caution-bg: #fcefcf;
+  --caution-border: #f1d593;
+
+  --diagram-fill: #e8eee7;
+  --diagram-stroke: #97ab9d;
+
+  color-scheme: light;
+}
+
+/* ============================================================
+   DARK — field / glare / low-light. Pine-charcoal, hi-vis.
+   ============================================================ */
+:root[data-theme='dark'] {
+  --bg: #0e1311;
+  --surface: #161c19;
+  --surface-2: #1e2521;
+  --fg: #ecf1ed;
+  --muted: #8a958d;
+  --border: #2a322d;
+
+  --accent: #ff6a1f; /* full hi-vis chainsaw orange */
+  --accent-fg: #160a02;
+
+  --danger: #ff463a;
+  --danger-fill: #2c100d;
+  --safe: #36d17c;
+  --warn-bg: #36280a;
+  --warn-fg: #ffc53d;
+  --warn-border: #574212;
+  --ok-bg: #0e2a1c;
+  --ok-border: #1f5739;
+  --caution-bg: #2e2406;
+  --caution-border: #574412;
+
+  --diagram-fill: #1c2622;
+  --diagram-stroke: #5e7a68;
+
+  color-scheme: dark;
+}
+
+/* Auto dark when no explicit data-theme is set (on-site primary). */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1c1b18;
-    --fg: #f3f1ec;
-    --warn-bg: #3a2f0f;
-    --warn-fg: #ffdf8a;
-    --warn-border: #d9a300;
-    --muted: #a3a199;
+  :root:not([data-theme]) {
+    --bg: #0e1311;
+    --surface: #161c19;
+    --surface-2: #1e2521;
+    --fg: #ecf1ed;
+    --muted: #8a958d;
+    --border: #2a322d;
+    --accent: #ff6a1f;
+    --accent-fg: #160a02;
+    --danger: #ff463a;
+    --danger-fill: #2c100d;
+    --safe: #36d17c;
+    --warn-bg: #36280a;
+    --warn-fg: #ffc53d;
+    --warn-border: #574212;
+    --ok-bg: #0e2a1c;
+    --ok-border: #1f5739;
+    --caution-bg: #2e2406;
+    --caution-border: #574412;
+    --diagram-fill: #1c2622;
+    --diagram-stroke: #5e7a68;
+    color-scheme: dark;
   }
 }
 
+/* ---- Base reset ---- */
 * {
   box-sizing: border-box;
 }
-
-html,
+html {
+  -webkit-text-size-adjust: 100%;
+}
 body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {

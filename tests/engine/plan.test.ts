@@ -1,7 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import { recommendPlan } from '../../src/engine/plan';
-import type { PlanInput } from '../../src/engine/types';
+import type { ActionablePlan, FellingPlan, PlanInput } from '../../src/engine/types';
 import * as C from '../../src/engine/constants';
+
+/**
+ * `FellingPlan` is a discriminated union (DB-1 §4): only the actionable variant
+ * carries cut specs. Tests that assert on notch/hinge/etc. narrow through this
+ * helper, which fails loudly if the engine unexpectedly referred.
+ */
+function actionable(p: FellingPlan): ActionablePlan {
+  expect(p.verdict).not.toBe('refer-professional');
+  if (p.verdict === 'refer-professional') {
+    throw new Error('expected an actionable plan but got a referral');
+  }
+  return p;
+}
 
 /**
  * Cut-recommendation tests (HANDOFF §2.2).
@@ -76,6 +89,17 @@ describe('plan/Rule 1 — referral gates (each fires independently)', () => {
     expect(p.reasons.some((r) => /lean/i.test(r))).toBe(true);
   });
 
+  it('GATE: palm-like species refers (no hinge wood — engine cannot honestly plan it)', () => {
+    // Palms have no real hinge wood; the notch/hinge model does not apply. The
+    // safe default is to refer (information-only), exactly like dead-compromised.
+    const p = recommendPlan(baseInput({ speciesClass: 'palm-like' }));
+    expect(p.verdict).toBe('refer-professional');
+    expect(p.reasons.some((r) => /palm/i.test(r))).toBe(true);
+    // A referral carries NO cut specs.
+    expect('notch' in p).toBe(false);
+    expect('hinge' in p).toBe(false);
+  });
+
   it('NON-GATE: a hazard well outside 1.5× height does NOT refer', () => {
     // height 14 → 21 m trigger. House 50 m out, on the fall line → safe.
     const p = recommendPlan(
@@ -97,11 +121,119 @@ describe('plan/Rule 1 — referral gates (each fires independently)', () => {
   });
 });
 
+// ── F1 — hazard sweep must NOT shrink with wind ──────────────────────────────
+
+describe('plan/F1 — wind must not hide a hazard near the calm-cone edge', () => {
+  // Auditor's regression: negligible lean (cone centers on target 180), open-face
+  // notch (calm base cone = STEERING_CONE_OPEN_FACE_DEG = 15°). A structure sits off
+  // to the side, reachable ONLY by fall lines near the calm-cone edge and within
+  // 1.5× height of one of them. On a calm day the ±15° sweep catches it → refer.
+  // The OLD wiring fed the hazard gate the WIND-REDUCED cone: at 14 kph the cone
+  // shrinks to 15·(1 − 0.5·14/15) ≈ 8°, the swept set no longer reaches the hazard,
+  // and the tree got actionable cut specs. Verified: with height 14, hazard at
+  // azimuth 250°, distance 24 m, the calm-cone nearest fall line is 19.66 m away
+  // (≤ 21 m trigger → refer) but the 8° cone's nearest line is 21.19 m (> 21 →
+  // would NOT refer). The hazard sweep must use a cone no narrower than the calm
+  // base cone, so wind cannot hide it.
+  const hazardAt = (windKph: number): FellingPlan =>
+    recommendPlan(
+      baseInput({
+        heightM: 14,
+        leanDeg: 0, // negligible → cone centered on target (180)
+        leanAzimuth: 0,
+        targetAzimuth: 180,
+        windKph,
+        hazards: [{ kind: 'structure', distanceM: 24, azimuth: 250 }],
+      }),
+    );
+
+  it('refers on a calm day (baseline)', () => {
+    const p = hazardAt(0);
+    expect(p.verdict).toBe('refer-professional');
+    expect(p.reasons.some((r) => /structure|power line|road|height of a possible fall/i.test(r))).toBe(true);
+  });
+
+  it('STILL refers under wind (14 kph) — wind must not narrow the hazard sweep', () => {
+    const p = hazardAt(14);
+    expect(p.verdict).toBe('refer-professional');
+    expect(p.reasons.some((r) => /structure|power line|road|height of a possible fall/i.test(r))).toBe(true);
+    expect('notch' in p).toBe(false);
+  });
+});
+
+// ── F4 — severe-forward-lean boundary (> vs >=) ──────────────────────────────
+
+describe('plan/F4 — severe forward lean boundary at SEVERE_FORWARD_LEAN_DEG', () => {
+  it('EXACTLY SEVERE_FORWARD_LEAN_DEG does NOT refer (top of conventional+bore window)', () => {
+    // forward lean = leanDeg·cos(0) = SEVERE_FORWARD_LEAN_DEG, aligned with target.
+    const p = recommendPlan(
+      baseInput({ leanDeg: C.SEVERE_FORWARD_LEAN_DEG, leanAzimuth: 180, targetAzimuth: 180 }),
+    );
+    expect(p.verdict).not.toBe('refer-professional');
+    // It's the conventional + bore caution case.
+    const a = actionable(p);
+    expect(a.notch.type).toBe('conventional');
+    expect(a.backCut.boreCut).toBe(true);
+    expect(a.verdict).toBe('caution');
+  });
+
+  it('just ABOVE SEVERE_FORWARD_LEAN_DEG refers (strictly greater)', () => {
+    const p = recommendPlan(
+      baseInput({ leanDeg: C.SEVERE_FORWARD_LEAN_DEG + 0.01, leanAzimuth: 180, targetAzimuth: 180 }),
+    );
+    expect(p.verdict).toBe('refer-professional');
+    expect(p.reasons.some((r) => /lean/i.test(r))).toBe(true);
+  });
+
+  it('EXACTLY MAX_LEAN_AWAY_DEG does NOT refer; just above refers (away-lean boundary)', () => {
+    // away component = leanDeg·cos(0) when leaning straight back from target.
+    const at = recommendPlan(
+      baseInput({ leanDeg: C.MAX_LEAN_AWAY_DEG, leanAzimuth: 0, targetAzimuth: 180 }),
+    );
+    expect(at.verdict).not.toBe('refer-professional');
+    const above = recommendPlan(
+      baseInput({ leanDeg: C.MAX_LEAN_AWAY_DEG + 0.01, leanAzimuth: 0, targetAzimuth: 180 }),
+    );
+    expect(above.verdict).toBe('refer-professional');
+  });
+
+  it('EXACTLY MAX_DBH_CM does NOT refer; just above refers (DBH boundary)', () => {
+    expect(recommendPlan(baseInput({ dbhCm: C.MAX_DBH_CM })).verdict).not.toBe('refer-professional');
+    expect(recommendPlan(baseInput({ dbhCm: C.MAX_DBH_CM + 0.01 })).verdict).toBe('refer-professional');
+  });
+
+  it('EXACTLY MAX_WIND_KPH does NOT refer; just above refers (wind boundary)', () => {
+    expect(recommendPlan(baseInput({ windKph: C.MAX_WIND_KPH })).verdict).not.toBe('refer-professional');
+    expect(recommendPlan(baseInput({ windKph: C.MAX_WIND_KPH + 0.01 })).verdict).toBe('refer-professional');
+  });
+});
+
+// ── DB-1 §4 — a referral carries NO actionable cut specs ─────────────────────
+
+describe('plan/DB-1 §4 — referral variant has no cut specs', () => {
+  it('referral carries no cut specs (discriminated union enforces it)', () => {
+    // Dead/compromised → guaranteed referral. The referral variant must expose
+    // ONLY verdict + dangerRadiusM + reasons — no notch/hinge/back-cut/fall
+    // direction/steering cone/escape routes can ever leak out.
+    const p = recommendPlan(baseInput({ speciesClass: 'dead-compromised' }));
+    expect(p.verdict).toBe('refer-professional');
+    expect('notch' in p).toBe(false);
+    expect('hinge' in p).toBe(false);
+    expect('backCut' in p).toBe(false);
+    expect('fallAzimuth' in p).toBe(false);
+    expect('steeringConeDeg' in p).toBe(false);
+    expect('escapeAzimuths' in p).toBe(false);
+    // But the information-only fields survive for the UI's danger zone + "why".
+    expect(p.dangerRadiusM).toBeCloseTo(C.DANGER_RADIUS_HEIGHT_MULT * 14, 6);
+    expect(p.reasons.length).toBeGreaterThan(0);
+  });
+});
+
 // ── Rule 2 — notch selection ─────────────────────────────────────────────────
 
 describe('plan/Rule 2 — notch selection', () => {
   it('default open-face for a balanced / lightly leaning tree', () => {
-    const p = recommendPlan(baseInput());
+    const p = actionable(recommendPlan(baseInput()));
     expect(p.notch.type).toBe('open-face');
     expect(p.notch.openingDeg).toBe(C.OPEN_FACE_OPENING_DEG);
     // depth ≈ ⅓ DBH = 10 cm for 30 cm DBH.
@@ -110,7 +242,7 @@ describe('plan/Rule 2 — notch selection', () => {
 
   it('conventional + bore cut for 5–10° forward lean toward target', () => {
     // 7° forward lean toward target (within the conventional window).
-    const p = recommendPlan(baseInput({ leanDeg: 7, leanAzimuth: 180, targetAzimuth: 180 }));
+    const p = actionable(recommendPlan(baseInput({ leanDeg: 7, leanAzimuth: 180, targetAzimuth: 180 })));
     expect(p.notch.type).toBe('conventional');
     expect(p.notch.openingDeg).toBe(C.CONVENTIONAL_OPENING_DEG);
     expect(p.backCut.boreCut).toBe(true);
@@ -120,7 +252,9 @@ describe('plan/Rule 2 — notch selection', () => {
   it('Humboldt is never auto-selected in v1 (no ground-slope input exists)', () => {
     // Sweep many inputs; Humboldt must never appear.
     for (let lean = 0; lean <= 9; lean++) {
-      const p = recommendPlan(baseInput({ leanDeg: lean, leanAzimuth: 180, targetAzimuth: 180 }));
+      const p = actionable(
+        recommendPlan(baseInput({ leanDeg: lean, leanAzimuth: 180, targetAzimuth: 180 })),
+      );
       expect(p.notch.type).not.toBe('humboldt');
     }
   });
@@ -131,14 +265,14 @@ describe('plan/Rule 2 — notch selection', () => {
 describe('plan/Rule 3 — hinge dimensions', () => {
   it('thickness = 10% DBH, length = 80% DBH for a normal trunk', () => {
     // DBH 40 → thickness 4.0 cm (≥ 2.5 min), length 32 cm.
-    const p = recommendPlan(baseInput({ dbhCm: 40 }));
+    const p = actionable(recommendPlan(baseInput({ dbhCm: 40 })));
     expect(p.hinge.thicknessCm).toBeCloseTo(4.0, 6);
     expect(p.hinge.lengthCm).toBeCloseTo(32, 6);
   });
 
   it('thickness is floored at HINGE_MIN_THICKNESS_CM for thin trunks', () => {
     // DBH 20 → 10% = 2.0 cm, below the 2.5 cm floor → clamps to 2.5.
-    const p = recommendPlan(baseInput({ dbhCm: 20 }));
+    const p = actionable(recommendPlan(baseInput({ dbhCm: 20 })));
     expect(p.hinge.thicknessCm).toBe(C.HINGE_MIN_THICKNESS_CM);
   });
 });
@@ -147,20 +281,20 @@ describe('plan/Rule 3 — hinge dimensions', () => {
 
 describe('plan/Rule 4 — back cut', () => {
   it('offset sits in the BACK_CUT_OFFSET range above the apex', () => {
-    const p = recommendPlan(baseInput());
+    const p = actionable(recommendPlan(baseInput()));
     expect(p.backCut.offsetCm).toBeGreaterThanOrEqual(C.BACK_CUT_OFFSET_MIN_CM);
     expect(p.backCut.offsetCm).toBeLessThanOrEqual(C.BACK_CUT_OFFSET_MAX_CM);
   });
 
   it('wedge prompted when DBH ≥ WEDGE_DBH_THRESHOLD_CM', () => {
-    const p = recommendPlan(baseInput({ dbhCm: C.WEDGE_DBH_THRESHOLD_CM }));
+    const p = actionable(recommendPlan(baseInput({ dbhCm: C.WEDGE_DBH_THRESHOLD_CM })));
     expect(p.backCut.wedges).toBeGreaterThanOrEqual(1);
   });
 
   it('wedge prompted when a back-lean component exists (even on a thin trunk)', () => {
     // thin DBH 18 (below wedge threshold) but 6° lean away from target → wedge.
-    const p = recommendPlan(
-      baseInput({ dbhCm: 18, leanDeg: 6, leanAzimuth: 0, targetAzimuth: 180 }),
+    const p = actionable(
+      recommendPlan(baseInput({ dbhCm: 18, leanDeg: 6, leanAzimuth: 0, targetAzimuth: 180 })),
     );
     expect(p.backCut.wedges).toBeGreaterThanOrEqual(1);
   });
@@ -171,15 +305,15 @@ describe('plan/Rule 4 — back cut', () => {
 describe('plan/Rule 5 — felling-direction feasibility', () => {
   it('target within the steering cone → fallAzimuth equals target', () => {
     // lean 3° az 100, target 110: natural=100, |110−100|=10 ≤ 15 cone → feasible.
-    const p = recommendPlan(baseInput({ leanDeg: 3, leanAzimuth: 100, targetAzimuth: 110 }));
+    const p = actionable(recommendPlan(baseInput({ leanDeg: 3, leanAzimuth: 100, targetAzimuth: 110 })));
     expect(p.fallAzimuth).toBeCloseTo(110, 6);
   });
 
   it('target outside the cone → nearest feasible azimuth, surfaced as a reason', () => {
     // Wind 0 → full open-face cone 15°. lean 4° az 100, target 130: natural=100,
     // diff 30 > 15 → fall = 100 + 15 = 115.
-    const p = recommendPlan(
-      baseInput({ leanDeg: 4, leanAzimuth: 100, targetAzimuth: 130, windKph: 0 }),
+    const p = actionable(
+      recommendPlan(baseInput({ leanDeg: 4, leanAzimuth: 100, targetAzimuth: 130, windKph: 0 })),
     );
     expect(p.fallAzimuth).toBeCloseTo(115, 6);
     expect(p.reasons.some((r) => /feasib|cannot reach|nearest/i.test(r))).toBe(true);
@@ -191,7 +325,7 @@ describe('plan/Rule 5 — felling-direction feasibility', () => {
 describe('plan/Rule 6 — escape routes', () => {
   it('two routes at 135°/225° off the fall line', () => {
     // fall 180 → escapes 315 and 45.
-    const p = recommendPlan(baseInput());
+    const p = actionable(recommendPlan(baseInput()));
     expect(p.fallAzimuth).toBeCloseTo(180, 6);
     expect(p.escapeAzimuths[0]).toBeCloseTo(315, 6);
     expect(p.escapeAzimuths[1]).toBeCloseTo(45, 6);
@@ -220,17 +354,19 @@ describe('FIXTURES (HANDOFF §5)', () => {
     // Steering cone: 15·(1 − 0.5·5/15) = 12.5°; target == natural → fall 180.
     // Back cut: wedge (DBH 30 ≥ 25) → wedges ≥ 1, boreCut false.
     // Escapes: 315 / 45. Danger: 2·14.8867 = 29.7734 m.
-    const p = recommendPlan({
-      heightM: 14.8867,
-      dbhCm: 30,
-      leanDeg: 2,
-      leanAzimuth: 180,
-      targetAzimuth: 180,
-      windKph: 5,
-      windAzimuth: 0,
-      speciesClass: 'softwood',
-      hazards: [],
-    });
+    const p = actionable(
+      recommendPlan({
+        heightM: 14.8867,
+        dbhCm: 30,
+        leanDeg: 2,
+        leanAzimuth: 180,
+        targetAzimuth: 180,
+        windKph: 5,
+        windAzimuth: 0,
+        speciesClass: 'softwood',
+        hazards: [],
+      }),
+    );
     expect(p.verdict).toBe('ok');
     expect(p.notch.type).toBe('open-face');
     expect(p.notch.depthCm).toBeCloseTo(10, 6);
@@ -260,6 +396,9 @@ describe('FIXTURES (HANDOFF §5)', () => {
     expect(p.verdict).toBe('refer-professional');
     expect(p.reasons.some((r) => /diameter|dbh/i.test(r))).toBe(true);
     expect(p.reasons.some((r) => /structure|hazard/i.test(r))).toBe(true);
+    // DB-1 §4: a referral carries NO actionable cut specs.
+    expect('notch' in p).toBe(false);
+    expect('hinge' in p).toBe(false);
   });
 
   it('FIXTURE 3 — back-leaner → caution, wedge, nearest-feasible azimuth', () => {
@@ -267,17 +406,19 @@ describe('FIXTURES (HANDOFF §5)', () => {
     // lean referral. Natural fall = 280; target 90 is opposite → infeasible;
     // nearest feasible = 280 + 15 = 295. Back-lean → wedge ≥ 1.
     // DBH 35 → hinge 3.5 cm / 28 cm. Danger 2·12 = 24 m.
-    const p = recommendPlan({
-      heightM: 12,
-      dbhCm: 35,
-      leanDeg: 8,
-      leanAzimuth: 280,
-      targetAzimuth: 90,
-      windKph: 0,
-      windAzimuth: 0,
-      speciesClass: 'hardwood',
-      hazards: [],
-    });
+    const p = actionable(
+      recommendPlan({
+        heightM: 12,
+        dbhCm: 35,
+        leanDeg: 8,
+        leanAzimuth: 280,
+        targetAzimuth: 90,
+        windKph: 0,
+        windAzimuth: 0,
+        speciesClass: 'hardwood',
+        hazards: [],
+      }),
+    );
     expect(p.verdict).toBe('caution');
     expect(p.backCut.wedges).toBeGreaterThanOrEqual(1);
     expect(p.fallAzimuth).toBeCloseTo(295, 6);
@@ -302,6 +443,9 @@ describe('FIXTURES (HANDOFF §5)', () => {
     });
     expect(p.verdict).toBe('refer-professional');
     expect(p.reasons.some((r) => /wind/i.test(r))).toBe(true);
+    // DB-1 §4: a referral carries NO actionable cut specs.
+    expect('notch' in p).toBe(false);
+    expect('hinge' in p).toBe(false);
   });
 
   it('FIXTURE 6 — dead tree → refer-professional', () => {
@@ -318,6 +462,9 @@ describe('FIXTURES (HANDOFF §5)', () => {
     });
     expect(p.verdict).toBe('refer-professional');
     expect(p.reasons.some((r) => /dead|compromis/i.test(r))).toBe(true);
+    // DB-1 §4: a referral carries NO actionable cut specs.
+    expect('notch' in p).toBe(false);
+    expect('hinge' in p).toBe(false);
   });
 });
 
