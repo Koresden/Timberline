@@ -28,7 +28,7 @@ The one ship blocker (F1) is fixed and regression-tested. All gates green:
 | **F4** | low | Severe-forward-lean boundary lightly tested. | **Fixed.** Boundary tests at exactly 10° (caution) and just above (refer), plus DBH/wind/away-lean boundaries. |
 | **F5** | low | `SEVERE_FORWARD_LEAN_DEG` aliased to a notch-window constant (coupled a referral gate to a comfort knob). | **Fixed.** Now an independent literal (still 10°) with its own citation. No locked value changed. |
 | **F6/F7** | nit | Absurd leans accepted (refer anyway); dead Humboldt branch in `CutCard`. | Deferred — cosmetic, no safety impact. |
-| **D** | low | **Hinge 3.5 cm renders "4 cm"** — diameter formatter rounds to 0 decimals, overstating small cut dimensions. | **Open** — recommend a quick fix (1-decimal for small cut specs). See decisions. |
+| **D** | low | **Hinge 3.5 cm renders "4 cm"** — diameter formatter rounds to 0 decimals, overstating small cut dimensions. | **Fixed** (follow-up #3). Added a dedicated `cut` display quantity (1 decimal) for notch/hinge/back-cut specs; DBH stays whole-cm. 3.5 cm now reads "3.5 cm". Tests + e2e updated. |
 
 ## qa — end-to-end (12 specs, mobile-chrome)
 

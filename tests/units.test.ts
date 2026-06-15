@@ -70,6 +70,33 @@ describe('formatLength', () => {
   });
 });
 
+describe('cut dimensions (finding D — small cut specs at 1 decimal, never overstated)', () => {
+  it('shows a 3.5 cm hinge as "3.5 cm", not the overstated "4 cm"', () => {
+    // The bug: cut specs reused the 'diameter' quantity (0 dp metric), so a
+    // 3.5 cm hinge rendered "4 cm" — overstating a small, safety-relevant spec.
+    expect(formatLength(3.5, 'cut', 'metric')).toBe('3.5 cm');
+  });
+
+  it('keeps a consistent 1 decimal across larger cut dimensions', () => {
+    expect(formatLength(24, 'cut', 'metric')).toBe('24.0 cm');
+  });
+
+  it('formats imperial cut dimensions at 1 decimal too', () => {
+    // 3.5 cm → 1.3779… in → "1.4 in"
+    expect(formatLength(3.5, 'cut', 'imperial')).toBe('1.4 in');
+  });
+
+  it('rounds down rather than up at the half-cm boundary it used to overstate', () => {
+    // 3.5 → "3.5" (not "4"); the rounding never inflates a small spec.
+    expect(formatLength(3.5, 'cut', 'metric', { withUnit: false })).toBe('3.5');
+  });
+
+  it('leaves DBH (the trunk diameter) at whole cm — only cut specs gained a decimal', () => {
+    // Regression guard: the fix is scoped to cut specs; DBH still reads "30 cm".
+    expect(formatLength(30, 'diameter', 'metric')).toBe('30 cm');
+  });
+});
+
 describe('parseLength', () => {
   it('parses a metric value straight to SI', () => {
     expect(parseLength('15', 'distance', 'metric')).toBeCloseTo(15, 9);
@@ -146,6 +173,8 @@ describe('unitLabel', () => {
     expect(unitLabel('distance', 'imperial')).toBe('ft');
     expect(unitLabel('diameter', 'metric')).toBe('cm');
     expect(unitLabel('diameter', 'imperial')).toBe('in');
+    expect(unitLabel('cut', 'metric')).toBe('cm');
+    expect(unitLabel('cut', 'imperial')).toBe('in');
     expect(unitLabel('speed', 'metric')).toBe('kph');
     expect(unitLabel('speed', 'imperial')).toBe('mph');
   });

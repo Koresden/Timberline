@@ -24,7 +24,7 @@ export interface FixtureExpect {
   /** Substring checks against the rendered cut card / danger label, when actionable. */
   notchLabel?: string;
   openingDeg?: string;
-  hingeThickness?: string; // formatted like the UI (cm, 0 decimals via formatDiameter)
+  hingeThickness?: string; // formatted like the UI (cm, 1 decimal via the 'cut' quantity)
   hingeLength?: string;
   fallAzimuth?: number; // surfaced in the EscapeCompass aria-label
   dangerLabel?: string; // e.g. "29.8 m" — surfaced in cut card / takeover
@@ -56,8 +56,8 @@ export const FIXTURE_1: Fixture = {
     verdict: 'ok',
     notchLabel: 'Open-face notch',
     openingDeg: '70°',
-    hingeThickness: '3 cm',
-    hingeLength: '24 cm',
+    hingeThickness: '3.0 cm',
+    hingeLength: '24.0 cm',
     fallAzimuth: 180,
     dangerLabel: '29.8 m',
   },
@@ -101,8 +101,8 @@ export const FIXTURE_3: Fixture = {
   expect: {
     verdict: 'caution',
     notchLabel: 'Open-face notch',
-    hingeThickness: '4 cm', // 3.5 cm → formatDiameter (0 decimals, metric) rounds to "4 cm"
-    hingeLength: '28 cm',
+    hingeThickness: '3.5 cm', // 3.5 cm → 'cut' quantity (1 decimal) renders "3.5 cm" (finding D fix)
+    hingeLength: '28.0 cm',
     fallAzimuth: 295,
     dangerLabel: '24.0 m',
   },

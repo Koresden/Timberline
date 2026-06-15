@@ -8,8 +8,8 @@
  * Plan feature narrows on `verdict` before choosing this vs. the takeover.
  *
  * 'caution' is made visually distinct from 'ok' via a modifier class + banner.
- * It renders engine output only — diameters/lengths are formatted by the passed
- * `formatDiameter` (the useUnits boundary); no math here.
+ * It renders engine output only — cut dimensions are formatted by the passed
+ * `formatCutDimension` (the useUnits boundary, 1-decimal cut precision); no math here.
  */
 import type { ActionablePlan } from '../engine/types';
 import { NotchDiagram } from './NotchDiagram';
@@ -18,8 +18,8 @@ import { WhyList } from './WhyList';
 
 interface CutCardProps {
   plan: ActionablePlan;
-  /** Format an SI centimetre value into the active unit (e.g. cm → in). */
-  formatDiameter: (cm: number) => string;
+  /** Format an SI centimetre cut spec into the active unit at 1 decimal (cm → in). */
+  formatCutDimension: (cm: number) => string;
   /** Pre-formatted danger radius (already unit-converted). */
   dangerRadiusLabel: string;
   /** True when the requested target was outside the steering cone. */
@@ -34,7 +34,7 @@ const NOTCH_LABEL: Record<ActionablePlan['notch']['type'], string> = {
 
 export function CutCard({
   plan,
-  formatDiameter,
+  formatCutDimension,
   dangerRadiusLabel,
   targetInfeasible,
 }: CutCardProps) {
@@ -80,7 +80,7 @@ export function CutCard({
               </div>
               <div>
                 <dt>Depth</dt>
-                <dd>{formatDiameter(plan.notch.depthCm)}</dd>
+                <dd>{formatCutDimension(plan.notch.depthCm)}</dd>
               </div>
             </dl>
             <NotchDiagram openingDeg={plan.notch.openingDeg} type={plan.notch.type} />
@@ -97,11 +97,11 @@ export function CutCard({
             <dl className="spec">
               <div>
                 <dt>Thickness</dt>
-                <dd>{formatDiameter(plan.hinge.thicknessCm)}</dd>
+                <dd>{formatCutDimension(plan.hinge.thicknessCm)}</dd>
               </div>
               <div>
                 <dt>Length</dt>
-                <dd>{formatDiameter(plan.hinge.lengthCm)}</dd>
+                <dd>{formatCutDimension(plan.hinge.lengthCm)}</dd>
               </div>
             </dl>
             <p className="cut-step-warn">Never cut through the hinge — it steers and controls the fall.</p>
@@ -118,7 +118,7 @@ export function CutCard({
             <dl className="spec">
               <div>
                 <dt>Offset above apex</dt>
-                <dd>{formatDiameter(plan.backCut.offsetCm)}</dd>
+                <dd>{formatCutDimension(plan.backCut.offsetCm)}</dd>
               </div>
               <div>
                 <dt>Bore (plunge) cut</dt>

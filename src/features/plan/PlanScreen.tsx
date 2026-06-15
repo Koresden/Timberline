@@ -97,7 +97,7 @@ export function PlanScreen() {
           {plan && (plan.verdict === 'ok' || plan.verdict === 'caution') && (
             <CutCard
               plan={plan}
-              formatDiameter={(cm) => units.format(cm, 'diameter')}
+              formatCutDimension={(cm) => units.format(cm, 'cut')}
               dangerRadiusLabel={dangerRadiusLabel}
               targetInfeasible={
                 lastInput != null &&

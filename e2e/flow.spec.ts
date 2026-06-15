@@ -60,14 +60,14 @@ test('FIXTURE 1 — full measure→plan→simulate flow, cross-checked vs DB-1',
   await expect(cutCard(page)).toHaveClass(/cut-card--ok/);
   await expect(page.getByText('Plan ready', { exact: false })).toBeVisible();
 
-  // Notch: open-face 70°, depth 10 cm.
+  // Notch: open-face 70°, depth 10 cm. Cut specs render at 1 decimal (finding D).
   await expect(page.getByRole('heading', { name: 'Open-face notch' })).toBeVisible();
   await expect(cutCard(page)).toContainText('70°');
-  await expect(cutCard(page)).toContainText('10 cm'); // depth = ⅓·30
+  await expect(cutCard(page)).toContainText('10.0 cm'); // depth = ⅓·30
 
   // Hinge: 3 cm × 24 cm.
-  await expect(cutCard(page)).toContainText('3 cm');
-  await expect(cutCard(page)).toContainText('24 cm');
+  await expect(cutCard(page)).toContainText('3.0 cm');
+  await expect(cutCard(page)).toContainText('24.0 cm');
 
   // CRITICAL CONTRACT (H+ΔH): danger radius = 2 × worst-case 14.8867 = 29.773 → "29.8 m".
   await expect(cutCard(page)).toContainText('29.8 m');
@@ -116,9 +116,10 @@ test('FIXTURE 3 — back-leaner → caution, wedge, nearest-feasible 295°', asy
   await expect(cutCard(page)).toHaveClass(/cut-card--caution/);
   await expect(page.getByText('Proceed with caution', { exact: false })).toBeVisible();
 
-  // Hinge 3.5 → "4 cm" (formatDiameter 0-dp), length 28 cm.
-  await expect(cutCard(page)).toContainText('4 cm');
-  await expect(cutCard(page)).toContainText('28 cm');
+  // Hinge 3.5 cm — now renders "3.5 cm" at 1 decimal (finding D fix; previously
+  // the 0-dp formatter overstated it as "4 cm"). Length 28 cm.
+  await expect(cutCard(page)).toContainText('3.5 cm');
+  await expect(cutCard(page)).toContainText('28.0 cm');
   // At least one wedge (back lean).
   const wedges = page.locator('.cut-step', { hasText: 'Back cut' });
   await expect(wedges).toContainText('1');
