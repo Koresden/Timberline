@@ -149,13 +149,37 @@ gloss conveys the derivation with one number. Keep one number.
 ### Sign-off
 - [x] Decision 3 — copy + guardrails **APPROVED-WITH-CHANGES by the safety-auditor**
   (2026-06-15); the two required changes are applied verbatim above
-- [ ] Decision 1 — placement (recommend A: CutCard step 4, actionable only) — **Daniel**
-- [ ] Decision 2 — behavior (recommend A: ephemeral, non-gating, self-resetting) — **Daniel**
-- [ ] Confirm we are building a **reminder/attestation, not a gate** (no precondition) — **Daniel**
-- [ ] On approval: build the component + wire into CutCard, add the e2e (incl. the three
-  auditor fences), run gates, log
+- [x] Decision 1 — placement (A: CutCard step 4, actionable only) — **Daniel, 2026-06-15**
+- [x] Decision 2 — behavior (A: ephemeral, non-gating, self-resetting) — **Daniel, 2026-06-15**
+- [x] Confirmed: **reminder/attestation, not a gate** (no precondition) — **Daniel, 2026-06-15**
+- [x] Built + wired + e2e + gates + browser-verified — see close-out below
 
-> Copy is auditor-vetted; **Decisions 1, 2, and the reminder-not-a-gate framing await
-> Daniel.** The auditor's sign-off is conditional on the exact copy above landing verbatim
-> and the non-gating e2e assertions being present. Per project rule, the auditor's position
-> ships on any disagreement.
+---
+
+## Close-out record (2026-06-15)
+
+**Shipped:** `src/components/AreaClearReminder.tsx` — presentational, local `useState` only,
+no store/storage/engine import. Wired into `CutCard` step 4 beside `EscapeCompass`, passing
+the card's existing `dangerRadiusLabel` + `plan.escapeAzimuths`. Copy is the auditor's
+approved wording verbatim. CSS `.area-clear*` is deliberately quiet — subordinate to the
+SafetyBanner, no success/"done" styling. All three auditor fences honored (no
+`checked`-coupling to any element; no completion styling/telemetry; `checked` stays local,
+with a code comment saying so).
+
+**e2e** (`e2e/area-clear.spec.ts`, 4 specs, all green):
+- Reminder shows on an actionable plan, starts unchecked; **cut specs visible both before
+  and after** checking (non-gating); checking reveals only the muted re-affirmation.
+- **Simulate reachable with the box unchecked** (no navigation gate) — auditor's assertion.
+- **Not persisted:** after a full reload + re-submit, the box is unchecked again.
+- **No attestation on a referral** (info-only) — it never implies "clear it and proceed".
+
+**Browser-verified** (mobile 375px): renders as a quiet card under the escape compass,
+worst-case radius **29.8 m** matches the cut card / compass / sim ring, escape routes
+315°/45°; checked state reveals the re-affirmation with no green success treatment; no
+console errors.
+
+**Gates:** `lint` clean · `test` **125** · `test:e2e` **16** (incl. 4 area-clear) ·
+`build` ✓. No engine, constant, referral-gate, or SafetyBanner change.
+
+> All three DB-4 follow-ups are now complete: (1) PWA offline SW, (3) hinge rounding,
+> (2) area-clear reminder.
