@@ -68,6 +68,17 @@
   padding: 4px 18px 28px;
 }
 
+/* ── Build stamp (DB-5) — unobtrusive footer so the user can see which build's
+   safety logic they hold, especially when running offline. Quiet by design. ── */
+.app-foot {
+  padding: 0 18px 18px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-align: center;
+}
+
 /* ── Stepper (SPEC §4) ─────────────────────────────────────────────────────── */
 .stepper {
   display: flex;
