@@ -9,6 +9,7 @@ coverage
 playwright-report
 test-results
 .playwright
+.swtest
 
 # local dev tooling (preview-harness launch config — recreated on demand)
 .claude/launch.json
