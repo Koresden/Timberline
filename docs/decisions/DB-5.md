@@ -120,7 +120,10 @@ delivery/caching. The persistent SafetyBanner and all gates are unaffected.
   zero: a permanently-offline user never receives a corrected gate/constant, and even
   with connectivity the update applies on the *next* launch (current session finishes on
   the prior build). No backend kill-switch by design. Mitigation: the dated build stamp
-  identifies the in-hand logic version.
+  identifies the in-hand logic version. **Regression-guarded** (follow-up) by
+  `e2e/sw-update.spec.ts` (`npm run test:e2e:swupdate`): it deploys a corrected build over
+  a cached one and proves the offline app then serves the **new** build, not the stale one
+  (`autoUpdate` + `cleanupOutdatedCaches`), landing on the next relaunch.
 - **Stamp dates the build, not the constants specifically.** Any source change bumps the
   date. Acceptable for v1 (a safety-constant change always ships as a newer build, so a
   stale constant always maps to an old date — no false "fresh" signal). A dedicated
