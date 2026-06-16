@@ -26,6 +26,12 @@ export default defineConfig({
     // public/manifest.webmanifest and linked from index.html, so the plugin
     // generates *only* the SW (`manifest: false`) — no duplicate manifest.
     VitePWA({
+      // Native build (DB-7): inside the Capacitor WebView the app is already served
+      // locally + offline from bundled assets, so the SW is redundant and can conflict
+      // (double caching; the autoUpdate/stale-logic model is replaced by App-Store/
+      // TestFlight versioning). `TIMBERLINE_NATIVE=1` fully disables SW generation +
+      // registration for the iOS build; the web PWA build is unaffected.
+      disable: !!process.env.TIMBERLINE_NATIVE,
       registerType: 'autoUpdate', // latest assets on next launch — shortest stale-safety-logic window
       injectRegister: 'auto',
       manifest: false,

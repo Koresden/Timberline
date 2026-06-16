@@ -23,7 +23,12 @@
   display: flex;
   gap: var(--space-2);
   align-items: flex-start;
-  padding: 10px 18px;
+  /* Safe-area inset (DB-7): in a native WebView / notched standalone PWA the
+     status bar overlaps the top. The banner is the one element the posture says
+     must ALWAYS be fully visible (HANDOFF §1), so it owns the top inset — its
+     background fills the status-bar strip and the text sits below it. On the
+     plain web (no inset) env() is 0, so this is a no-op there. */
+  padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
   font-size: var(--text-xs);
   line-height: 1.4;
   background: var(--warn-bg);
