@@ -10,8 +10,11 @@ const PORT = 5180;
 
 // Build stamp (DB-5): an offline-cached *safety* tool can serve stale safety
 // logic, so we surface which build the user is holding. The date is resolved
-// once at build time and frozen into the bundle via `define`.
-const BUILD_DATE = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+// once at build time and frozen into the bundle via `define`. `TIMBERLINE_BUILD_DATE`
+// pins it for reproducible builds and lets the SW cache-update e2e produce two
+// distinguishable builds (see e2e/sw-update.spec.ts).
+const BUILD_DATE =
+  process.env.TIMBERLINE_BUILD_DATE ?? new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
 
 export default defineConfig({
   define: {

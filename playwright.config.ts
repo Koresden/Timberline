@@ -4,10 +4,11 @@ import { defineConfig, devices } from '@playwright/test';
 // measure -> plan -> simulate flow across the six fixtures.
 export default defineConfig({
   testDir: './e2e',
-  // The offline/SW spec needs the production build (the service worker is
-  // disabled in `vite dev`), so it runs from its own config against `vite
-  // preview` — see playwright.offline.config.ts. Keep it out of the dev suite.
-  testIgnore: '**/offline.spec.ts',
+  // The offline/SW specs need the production build (the service worker is
+  // disabled in `vite dev`), so they run from their own configs — see
+  // playwright.offline.config.ts and playwright.swupdate.config.ts. Keep them
+  // out of the dev suite.
+  testIgnore: ['**/offline.spec.ts', '**/sw-update.spec.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
