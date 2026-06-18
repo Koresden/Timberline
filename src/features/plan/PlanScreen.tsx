@@ -95,15 +95,37 @@ export function PlanScreen() {
           {/* Narrow on the verdict discriminant: only an ActionablePlan reaches
               the CutCard. A referral was handled by the takeover branch above. */}
           {plan && (plan.verdict === 'ok' || plan.verdict === 'caution') && (
-            <CutCard
-              plan={plan}
-              formatCutDimension={(cm) => units.format(cm, 'cut')}
-              dangerRadiusLabel={dangerRadiusLabel}
-              targetInfeasible={
-                lastInput != null &&
-                Math.abs(angleGap(plan.fallAzimuth, lastInput.targetAzimuth)) > 0.5
-              }
-            />
+            <>
+              {/* At-a-glance summary (DB-8) — the mockup's control tiles. Same
+                  engine values the detailed CutCard expands on below. */}
+              <div className="stat-tiles">
+                <div className="stat-tile">
+                  <div className="stat-label">Direction</div>
+                  <div className="stat-value">{Math.round(plan.fallAzimuth)}°</div>
+                </div>
+                <div className="stat-tile">
+                  <div className="stat-label">Notch</div>
+                  <div className="stat-value">{plan.notch.openingDeg}°</div>
+                </div>
+                <div className="stat-tile">
+                  <div className="stat-label">Hinge</div>
+                  <div className="stat-value">
+                    {units.format(plan.hinge.thicknessCm, 'cut', { withUnit: false })}
+                    <span className="stat-unit"> {units.label('cut')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <CutCard
+                plan={plan}
+                formatCutDimension={(cm) => units.format(cm, 'cut')}
+                dangerRadiusLabel={dangerRadiusLabel}
+                targetInfeasible={
+                  lastInput != null &&
+                  Math.abs(angleGap(plan.fallAzimuth, lastInput.targetAzimuth)) > 0.5
+                }
+              />
+            </>
           )}
         </>
       )}

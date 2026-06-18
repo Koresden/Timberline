@@ -14,7 +14,12 @@ import { useUnits } from '../../hooks/useUnits';
 import { TangentForm } from './TangentForm';
 import { StickChecklist } from './StickChecklist';
 
-export function MeasureScreen() {
+interface MeasureScreenProps {
+  /** Advance to the Plan step (the mockup's "Continue to Plan" forward action). */
+  onContinue?: () => void;
+}
+
+export function MeasureScreen({ onContinue }: MeasureScreenProps) {
   const [method, setMethod] = useState<MeasureMethod>('tangent');
   const setMeasuredHeight = useAppStore((s) => s.setMeasuredHeight);
   const measuredHeight = useAppStore((s) => s.measuredHeight);
@@ -58,10 +63,19 @@ export function MeasureScreen() {
             <path d="m8 12 2.5 2.5L16 9" stroke="var(--safe)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <span>
-            Saved for planning: <strong>{units.formatEstimate(measuredHeight)}</strong>. Open the
-            Plan step — the worst-case height is prefilled.
+            Saved for planning: <strong>{units.formatEstimate(measuredHeight)}</strong>. The
+            worst-case height is prefilled on the Plan step.
           </span>
         </p>
+      )}
+
+      {measuredHeight && onContinue && (
+        <button type="button" className="btn btn-primary btn-block" onClick={onContinue}>
+          Continue to Plan
+          <svg width="16" height="14" viewBox="0 0 16 14" fill="none" aria-hidden="true">
+            <path d="M1 7h13M9 2l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       )}
     </div>
   );

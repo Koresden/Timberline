@@ -22,6 +22,7 @@ import { useUnits } from '../../hooks/useUnits';
 import { useUnitField } from '../../hooks/useUnitField';
 import { useDeviceOrientation } from '../../hooks/useDeviceOrientation';
 import { NumericField } from '../../components/NumericField';
+import { SightPanel } from '../../components/SightPanel';
 
 interface TangentFormProps {
   onMeasured: (estimate: HeightEstimate) => void;
@@ -80,8 +81,13 @@ export function TangentForm({ onMeasured }: TangentFormProps) {
   const sensorUnavailable =
     orientation.status === 'unsupported' || orientation.status === 'denied';
 
+  const liveHeightLabel = result?.ok ? units.format(result.estimate.heightM, 'distance') : null;
+
   return (
     <div className="tangent-form">
+      {/* ── Sighting viewfinder (illustration; reflects the real height) ──── */}
+      <SightPanel heightLabel={liveHeightLabel} />
+
       {/* ── Device tilt capture ─────────────────────────────────────────── */}
       <div className="sensor-panel">
         <h3>Device tilt</h3>
@@ -178,11 +184,21 @@ export function TangentForm({ onMeasured }: TangentFormProps) {
         {result?.ok === false && <p className="readout-error">{result.message}</p>}
         {result?.ok === true && (
           <>
-            <p className="readout-value">
-              <span className="readout-label">Estimated height</span>
-              <span className="readout-h">{units.formatEstimate(result.estimate)}</span>
+            <div className="stat-tiles">
+              <div className="stat-tile">
+                <div className="stat-label">Height</div>
+                <div className="stat-value">
+                  {units.format(result.estimate.heightM, 'distance', { withUnit: false })}
+                  <span className="stat-unit"> {units.label('distance')}</span>
+                </div>
+              </div>
+            </div>
+            <p className="stat-meta">
+              <span>± {units.format(result.estimate.errorM, 'distance')}</span>
+              <span className="sep">·</span>
+              <span>plans use worst case {units.format(result.estimate.heightM + result.estimate.errorM, 'distance')}</span>
             </p>
-            <button type="button" className="btn btn-primary" onClick={() => onMeasured(result.estimate)}>
+            <button type="button" className="btn btn-primary btn-block" onClick={() => onMeasured(result.estimate)}>
               Use this height for planning
             </button>
           </>

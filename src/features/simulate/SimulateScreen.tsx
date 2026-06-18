@@ -50,6 +50,31 @@ export function SimulateScreen() {
       <h2>Simulate the fall</h2>
       <TopView plan={plan} input={input} dangerRadiusLabel={dangerRadiusLabel} />
       <SideView heightM={heightM} />
+
+      {/* Honest readout (DB-8): real engine values only. The mockup's "time to
+          ground" is a physics figure the sim deliberately does NOT model (it's a
+          kinematic visualization, not a physics model — DB-4), so we surface the
+          worst-case danger radius there instead — the safety-relevant number. */}
+      <div className="stat-tiles">
+        <div className="stat-tile">
+          <div className="stat-label">Fall direction</div>
+          <div className="stat-value">{Math.round(plan.fallAzimuth)}°</div>
+        </div>
+        <div className="stat-tile">
+          <div className="stat-label">Fall length</div>
+          <div className="stat-value">
+            {units.format(heightM, 'distance', { withUnit: false })}
+            <span className="stat-unit"> {units.label('distance')}</span>
+          </div>
+        </div>
+        <div className="stat-tile">
+          <div className="stat-label">Danger radius</div>
+          <div className="stat-value stat-value--warn">
+            {units.format(plan.dangerRadiusM, 'distance', { withUnit: false })}
+            <span className="stat-unit"> {units.label('distance')}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -72,7 +72,7 @@ export default function App() {
       <Stepper steps={steps} onSelect={(key) => setTab(key as Tab)} />
 
       <main className="app-main">
-        {tab === 'measure' && <MeasureScreen />}
+        {tab === 'measure' && <MeasureScreen onContinue={() => setTab('plan')} />}
         {tab === 'plan' && <PlanScreen />}
         {tab === 'simulate' && <SimulateScreen />}
       </main>
