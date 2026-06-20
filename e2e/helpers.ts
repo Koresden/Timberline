@@ -62,8 +62,11 @@ export async function fillMeasure(
   await page.locator('#tan-distance').fill(distance);
   await page.locator('#tan-angle-top').fill(angleTop);
   await page.locator('#tan-angle-base').fill(angleBase);
-  const readout = page.locator('.readout-h');
-  await expect(readout).toBeVisible();
+  // The result renders as a Height stat tile + a "± ΔH · worst case" meta line
+  // (DB-8 visual polish). Return the whole readout text so callers can assert the
+  // height and the error band together.
+  const readout = page.locator('.readout');
+  await expect(readout.locator('.stat-value')).toBeVisible();
   return (await readout.textContent())?.trim() ?? '';
 }
 
