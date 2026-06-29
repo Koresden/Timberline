@@ -94,9 +94,9 @@ goal is just "see it running like an app," the PWA route needs no brief and no `
 - [x] Decision 1 — Capacitor + 3 deps + committed `ios/` — approved
 - [x] Decision 2 — service worker disabled in the native build — approved
 - [x] Decision 3 — first step = simulator boot; sensor validation a follow-up — approved
-- [ ] Safety-auditor confirms the wrapper preserves the posture (banner/gates/no override)
-  — **pending**; the only posture-adjacent change is the banner safe-area padding, which
-  strictly *improves* visibility (see close-out)
+- [x] Safety-auditor confirms the wrapper preserves the posture (banner/gates/no override)
+  — **APPROVED** (safety-auditor, 2026-06-29; see sign-off below). The one posture-adjacent
+  change — the banner safe-area padding — was audited and strictly *improves* visibility.
 - [x] Implemented: installed, `cap add ios`, synced, opened in Xcode, **booted on the simulator**
 
 ---
@@ -136,3 +136,89 @@ change; the only source edit is the banner safe-area padding.
 
 > Nothing installed yet. If the goal is just to *see it running like an app*, say so and I'll
 > skip all of this and stand up the PWA instead.
+
+---
+
+## Safety-auditor sign-off (2026-06-29)
+
+**Verdict: APPROVE.** The Capacitor wrapper preserves every safety invariant in HANDOFF §1
+and CLAUDE.md "Safety posture." This is a delivery shell only — no runtime native code path
+touches app logic, the web bundle is identical in both targets, and the one posture-adjacent
+CSS change strictly strengthens banner visibility.
+
+**What I verified (read-only audit; file:line evidence):**
+
+1. **Persistent SafetyBanner — renders everywhere, fully visible in the native shell.**
+   - `src/App.tsx:62` mounts `<SafetyBanner />` as the first child of `.app`, *above* the
+     `tab` switch (`src/App.tsx:74–78`) — it is not inside any conditional, so it renders on
+     Measure / Plan / Simulate alike. Component is presentational, non-dismissable, with no
+     dismiss/override control (`src/components/SafetyBanner.tsx:8–27`).
+   - The safe-area change (`src/App.css:31`: `padding: calc(10px + env(safe-area-inset-top)) 18px 10px;`)
+     **only adds top padding.** It does not introduce `display:none`, `visibility:hidden`,
+     `max-height`, `overflow:hidden`, or any conditional removal. Grep for those on
+     `.safety-banner` returns nothing; the only `overflow:hidden` rules in `App.css`
+     (lines 370, 570, 878) are on unrelated panels. The banner keeps `position:sticky; top:0;
+     z-index:20` (`src/App.css:20–22`) and has no height cap, so growing the top padding can
+     only make it *larger*, never clip it.
+   - **Web no-op confirmed:** `env(safe-area-inset-top)` appears exactly once in the whole
+     source (`src/App.css:31`); on plain web with no inset it resolves to 0, so top padding
+     stays 10px — identical to before. No other CSS file touches `.safety-banner`.
+
+2. **No "override safety" affordance anywhere — wrapper introduced none.** A case-insensitive
+   grep across `src/` for override / bypass / authorize / unlock / lockout / "begin cut" /
+   "start cut" / disable-safety / skip-warning / dismiss returns only comments asserting the
+   *opposite* (`SafetyBanner.tsx:6` "no … override"; `AreaClearReminder.tsx:12,17` "gates/unlocks
+   NOTHING"; `App.css:699` "ticking acknowledges, never unlocks"). The native scaffold adds
+   nothing: `AppDelegate.swift` is stock boilerplate (no custom logic), `Info.plist` is the
+   stock template (no custom URL scheme / authorization hooks), and the only bridge reference
+   is the stock `CAPBridgeViewController` (`ios/App/App/Base.lproj/Main.storyboard:14`). No
+   custom Capacitor plugin, no `evaluateJavaScript` injection, no custom server/allowNavigation.
+
+3. **Referral takeover still suppresses cut specs — no native bypass.** `PlanScreen.tsx:71,77–84`
+   narrows on `verdict === 'refer-professional'` and renders **only** `<ReferralTakeover>` plus
+   a "Back to inputs" button — no `PlanForm`, no `CutCard`. `ReferralTakeover` receives a
+   `ReferralPlan` discriminated-union variant that *by type* carries no notch/hinge/back-cut
+   fields (`ReferralTakeover.tsx:12–18`, `engine/types.ts`), so leaking cut specs is impossible
+   at the type level. The wrapper loads the same `dist/` bundle, so this path is unchanged.
+
+4. **Worst-case height (H + ΔH) unchanged.** `worstCaseHeightM` still returns
+   `heightM + errorM` (`src/store/worstCaseHeight.ts:17–19`), seeded into the plan via
+   `PlanScreen.tsx:38`. Danger radius is `DANGER_RADIUS_HEIGHT_MULT × heightM`
+   (`engine/plan.ts:249`) with the multiplier still `= 2` (`engine/constants.ts:152`), and the
+   sim derives its footprint back out of the same value (`engine/sim.ts:86`). No engine/constant
+   file was touched by DB-7.
+
+5. **No native-only code branch can bypass safety.** Grep of `src/` for
+   `Capacitor` / `isNativePlatform` / `TIMBERLINE_NATIVE` / `process.env` / `import.meta.env` /
+   platform finds **no runtime conditional** in app code (the single `platform` hit is an
+   unrelated comment in `useDeviceOrientation.ts:110`). The native/web split lives only in the
+   build (`vite.config.ts:34`, an env flag that toggles SW *generation*), not in shipped logic —
+   so Measure/Plan/Simulate behave bit-for-bit identically in the WebView.
+
+6. **No detection / authorization / lockout / "begin cut" surface (DB-8 bucket C).** Confirmed
+   absent in both the web source (grep above) and the native scaffold (`capacitor.config.ts` is
+   appId/appName/webDir only; `Info.plist` and `AppDelegate.swift` add no such surface).
+
+7. **Disabling the SW in the native build weakens no safety behavior.** The SW is purely an
+   offline/caching concern (`vite.config.ts:24–49`): precaching the shell + `navigateFallback`.
+   No referral gate, danger-radius math, banner, or worst-case-height logic lives in or depends
+   on the SW — all of that is in the React bundle + pure engine, which ships inside the app
+   regardless. The DB-5 build stamp (`App.tsx:85–91`) still renders natively, and the
+   "reconnect for updates" caveat is replaced by App-Store/TestFlight versioning. Offline
+   guarantee preserved by a different mechanism; safety surface untouched.
+
+**Residual risk (accepted, not blocking — follow-ups, not regressions):**
+- **Clinometer sensor perms in WKWebView are unvalidated on device** (acknowledged in the
+  close-out). This is a *degraded-input* risk, not a safety-gate weakening: if tilt is
+  unavailable the app falls back to manual entry, and the worst-case-height + referral gates
+  apply equally to manual values. No cut advice is unlocked by a missing sensor. Must be
+  re-validated on real hardware before any "sensor works on iOS" claim is made.
+- The banner's reliance on `env(safe-area-inset-top)` assumes the WebView reports a non-zero
+  inset under the status bar (Capacitor default `contentInset`/viewport-fit behavior). The
+  close-out reports the banner rendering fully visible on the iPhone 17 Pro simulator; this
+  should be re-confirmed on a physical notched/Dynamic-Island device and in landscape, since a
+  misconfigured viewport-fit could theoretically yield a 0 inset (banner would fall back to the
+  10px web padding — still visible, just back under the status bar). Low severity, visual-only,
+  but worth a one-line on-device check.
+
+No posture weakening found. The pending sign-off box is checked.
