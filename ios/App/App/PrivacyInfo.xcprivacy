@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Timberline app-level privacy manifest.
+  Timberline is a fully offline planning aid: no accounts, no backend, no analytics, no
+  tracking. State is held in the device's local web storage (zustand + localStorage); it
+  bundles no Capacitor plugin that calls a required-reason API (no @capacitor/preferences →
+  UserDefaults CA92.1, no @capacitor/filesystem → FileTimestamp C617.1). Capacitor core ships
+  its own manifest for the SDK itself; this app-level manifest is a defensive, explicit
+  "we collect nothing, track nothing, and call no required-reason API" declaration.
+  If a required-reason-API plugin is ever added, list its category + approved reason in
+  NSPrivacyAccessedAPITypes here (DB-10).
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array/>
+</dict>
+</plist>
